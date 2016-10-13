@@ -6,6 +6,7 @@ PoC code for the Sharing Economy of Things platform.
 
 - Python 3.5.x or later
 - pip
+- OpenSSL
 
 ## How to run
 
