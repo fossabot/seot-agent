@@ -92,3 +92,5 @@ ENV/
 .ropeproject
 
 .direnv/
+cert/*
+!cert/.gitkeep
