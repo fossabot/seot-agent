@@ -1,10 +1,10 @@
 import asyncio
 import logging
 
-import aiohttp
 import colorlog
 from seot.agent import config
 from seot.agent import dpp
+from seot.agent import cpp
 import uvloop
 
 
@@ -30,18 +30,10 @@ def print_startup_message():
     )
 
 
-async def send_heartbeat():
-    print("Sending heartbeat...")
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://api.github.com/events") as resp:
-            print(resp.status)
-            print(await resp.text())
-
-
 async def main_loop():
     while True:
         await asyncio.sleep(config.get("cpp.heartbeat_interval"))
-        await send_heartbeat()
+        await cpp.heartbeat()
 
 
 def main():
