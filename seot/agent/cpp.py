@@ -35,7 +35,7 @@ async def _request(method, endpoint, data=None):
 
 
 async def heartbeat():
-    logger.info("Sending heartbeat...")
+    logger.info("Sending heartbeat to SEoT server...")
 
     await _request("POST", "/heartbeat", data={
         "user_id": config.get("device.user_id"),

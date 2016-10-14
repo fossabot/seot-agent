@@ -13,7 +13,7 @@ __version__ = "0.0.1"
 logger = logging.getLogger(__name__)
 
 
-def print_startup_message():
+def log_startup_message():
     logger.info("This is SEoT Agent version {0}".format(__version__))
     logger.info("Device ID: {0}".format(config.get_state("device_id")))
     logger.info("Owner of this device: {0}".format(
@@ -31,8 +31,8 @@ def print_startup_message():
 
 async def main_loop():
     while True:
-        await asyncio.sleep(config.get("cpp.heartbeat_interval"))
         await cpp.heartbeat()
+        await asyncio.sleep(config.get("cpp.heartbeat_interval"))
 
 
 def main():
@@ -67,7 +67,7 @@ def main():
     config.init()
 
     # Print diagnostic messages
-    print_startup_message()
+    log_startup_message()
 
     # Initialize dpp component
     dpp.init()
@@ -78,4 +78,11 @@ def main():
     # Run main event loop
     logger.info("Launching main event loop...")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main_loop())
+
+    dpp_server = dpp.DPPServer()
+    dpp_server.start(loop)
+
+    try:
+        loop.run_until_complete(main_loop())
+    finally:
+        loop.close()

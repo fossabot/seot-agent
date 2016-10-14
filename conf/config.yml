@@ -6,7 +6,7 @@ device:
     longitude: 34.8222789
     latitude: 135.5258597
 cpp:
-  heartbeat_interval: 1
+  heartbeat_interval: 60
   base_url: http://localhost:8888/api
 dpp:
   listen_address: 0.0.0.0

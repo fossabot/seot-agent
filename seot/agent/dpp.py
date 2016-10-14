@@ -1,9 +1,12 @@
+import asyncio
 import logging
 import ssl
 import sys
 from pathlib import Path
 
 import envoy
+import msgpack
+from seot.agent import config
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +62,9 @@ def generate_cert():
 def check_cert():
     """ Check sanity of certificate """
     logger.info("Checking certificate sanity")
-    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     try:
-        context.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
+        ssl_ctx.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
     except ssl.SSLError:
         logger.error("Certificate is broken")
         sys.exit(1)
@@ -79,3 +82,70 @@ def init():
     check_cert()
 
     logger.info("DPP subsystem successfully initialized")
+
+
+class DPPServer:
+    def __init__(self):
+        self.server = None
+        # task -> (reader, writer)
+        self.clients = {}
+
+    def _get_peer_addr(self, writer):
+        """ Get address of peer """
+        return writer.get_extra_info("peername")
+
+    def _log_ssl_info(self, writer):
+        """ Log debugging info on SSL socket """
+        compression = writer.get_extra_info("compression")
+        (cipher, version, bits) = writer.get_extra_info("cipher")
+
+        logger.info("Compression algorithm: {0}".format(compression))
+        logger.info("Cipher algorithm: {0}, SSL version: {1}, Key length: {2}"
+                    .format(cipher, version, bits))
+
+    def _accept_client(self, reader, writer):
+        """ Accepts a new client connection and launch a task """
+        (host, port) = self._get_peer_addr(writer)
+        logger.info("Accepted DPP connection from {0}:{1}".format(host, port))
+        self._log_ssl_info(writer)
+
+        task = asyncio.Task(self._handle_client(reader, writer))
+        self.clients[task] = (reader, writer)
+
+        def client_done(task):
+            logger.info("Client disconnected")
+            del self.clients[task]
+
+        task.add_done_callback(client_done)
+
+    async def _handle_client(self, reader, writer):
+        """ Handle requests from individual clients """
+        while True:
+            data = await reader.read()
+            # Client is disconnected
+            if not data:
+                break
+
+            msg = msgpack.unpackb(data)
+            logger.info("Received DPP message: {0}".format(msg))
+
+    def start(self, loop):
+        """ Start TLS server """
+
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
+
+        addr = config.get("dpp.listen_address")
+        port = config.get("dpp.listen_port")
+        logger.info("Launching DPP server at {0}:{1}".format(addr, port))
+
+        self.server = loop.run_until_complete(
+            asyncio.streams.start_server(self._accept_client, addr, port,
+                                         loop=loop, ssl=ssl_ctx))
+
+    def stop(self, loop):
+        """ Stop TLS server """
+        if self.server is not None:
+            self.server.close()
+            loop.run_until_complete(self.server.wait_closed())
+            self.server = None
