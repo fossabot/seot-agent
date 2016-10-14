@@ -1,7 +1,7 @@
 import asyncio
 import logging
+import logging.config
 
-import colorlog
 from seot.agent import config
 from seot.agent import dpp
 from seot.agent import cpp
@@ -10,8 +10,7 @@ import uvloop
 
 __version__ = "0.0.1"
 
-logger = logging.getLogger("core")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def print_startup_message():
@@ -37,11 +36,29 @@ async def main_loop():
 
 
 def main():
-    # Enable colorlog
-    handler = colorlog.StreamHandler()
-    handler.setFormatter(colorlog.ColoredFormatter(
-        "%(log_color)s[%(levelname)s] %(fg_white)s[%(name)s]: %(message)s"))
-    colorlog.getLogger("").addHandler(handler)
+    # Configure logging and enable colorlog
+    logging.config.dictConfig({
+        "version": 1,
+        "formatters": {
+            "colored": {
+                "()": "colorlog.ColoredFormatter",
+                "format": "%(log_color)s[%(levelname)s] "
+                          + "%(fg_white)s[%(name)s]: %(message)s"
+            },
+        },
+        "handlers": {
+            "default": {
+                "class": "colorlog.StreamHandler",
+                "level": "INFO",
+                "formatter": "colored"
+            }
+        },
+        "root": {
+            "level": "INFO",
+            "handlers": ["default"],
+        },
+        "disable_existing_loggers": False,
+    })
 
     # Use uvloop as event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -54,6 +71,9 @@ def main():
 
     # Initialize dpp component
     dpp.init()
+
+    # Initialize cpp component
+    cpp.init()
 
     # Run main event loop
     logger.info("Launching main event loop...")

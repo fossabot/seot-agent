@@ -5,8 +5,7 @@ from pathlib import Path
 
 import envoy
 
-logger = logging.getLogger("dpp")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 CERT_DIR_PATH = Path.home() / ".seot/cert"
 CERT_KEY_PATH = CERT_DIR_PATH / "privkey.pem"
@@ -14,6 +13,7 @@ CERT_PATH = CERT_DIR_PATH / "cert.key"
 
 
 def cert_exists():
+    """ Check if certificate exists """
     if not Path(CERT_PATH).is_file() or not Path(CERT_KEY_PATH).is_file():
         return False
 
@@ -21,6 +21,7 @@ def cert_exists():
 
 
 def generate_cert():
+    """ Generate certificate """
     CERT_DIR_PATH.mkdir(parents=True)
 
     r = envoy.run("which openssl")
@@ -56,6 +57,7 @@ def generate_cert():
 
 
 def check_cert():
+    """ Check sanity of certificate """
     logger.info("Checking certificate sanity")
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
     try:
@@ -68,6 +70,7 @@ def check_cert():
 
 
 def init():
+    """ Initialize dpp module """
     logger.info("Initializing DPP subsystem")
 
     if not cert_exists():

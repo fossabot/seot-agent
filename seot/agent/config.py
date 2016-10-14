@@ -11,22 +11,23 @@ CONFIG_FILE_PATH = Path("conf/config.yml")
 SEOT_DIR_PATH = Path.home() / ".seot"
 STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
 
-logger = logging.getLogger("conf")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 _config = None
 _state = None
 
 
 def get(key=None):
+    """ Get a configuration value """
     return _config.get(key)
 
 
 def save_state():
+    """ Persis current state """
     with STATE_FILE_PATH.open("w") as f:
         f.write(_state.export())
 
 
-def init_state():
+def _init_state():
     if not SEOT_DIR_PATH.exists():
         SEOT_DIR_PATH.mkdir(parents=True)
 
@@ -41,10 +42,12 @@ def init_state():
 
 
 def get_state(key=None):
+    """ Get a state value """
     return _state.get(key)
 
 
 def init():
+    """ Initialize configuration module """
     global _config
     global _state
 
@@ -67,4 +70,4 @@ def init():
             logger.error("Failed to load state")
             sys.exit(1)
     else:
-        init_state()
+        _init_state()
