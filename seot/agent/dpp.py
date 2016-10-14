@@ -77,7 +77,7 @@ class DPPServer:
 
         async def _start_server():
             self.server = await asyncio.streams.start_server(
-                    self._accept_client, addr, port, loop=loop, ssl=ssl_ctx
+                self._accept_client, addr, port, loop=loop, ssl=ssl_ctx
             )
 
         asyncio.ensure_future(_start_server())

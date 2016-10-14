@@ -1,4 +1,5 @@
 import logging
+import logging.config
 
 from seot import agent
 from seot.agent import config
@@ -29,6 +30,22 @@ def log_startup_message():
     logger.info("Heartbeat interval: {0}s".format(
         config.get("cpp.heartbeat_interval"))
     )
+
+
+def log_quit_message():
+    """ Print quit message """
+
+    farewell = """
+     ______
+    < Bye! >
+     ------
+            \   ^__^
+             \  (oo)\_______
+                (__)\       )\/\\
+                    ||----w |
+                    ||     ||
+        """
+    logger.info(farewell)
 
 
 def configure_logging():

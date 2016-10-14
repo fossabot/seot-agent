@@ -1,11 +1,11 @@
 import asyncio
 import logging
-import logging.config
 
 from seot.agent import config
 from seot.agent import dpp
 from seot.agent import cpp
 from seot.agent.util import configure_logging, log_startup_message
+from seot.agent.util import log_quit_message
 from transitions import Machine
 import uvloop
 
@@ -16,12 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class Agent():
-    states = ["init", "idle"]
+    states = ["idle"]
 
     def __init__(self):
         self.machine = Machine(model=self, states=self.__class__.states,
-                               initial="init")
-        self.machine.add_transition(trigger="init", source="init", dest="idle")
+                               initial="idle")
 
         self.loop = asyncio.get_event_loop()
         self.cpp_server = cpp.CPPServer()
@@ -35,8 +34,16 @@ class Agent():
         logger.info("Starting main event loop...")
         try:
             self.loop.run_forever()
+        except KeyboardInterrupt:
+            logger.info("Received keyboard interrupt")
         finally:
-            self.loop.close()
+            logger.info("Shutting down...")
+
+            self.cpp_server.stop(self.loop)
+            self.dpp_server.stop(self.loop)
+
+        self.loop.close()
+        log_quit_message()
 
 
 def main():

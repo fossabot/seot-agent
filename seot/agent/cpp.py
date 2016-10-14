@@ -54,9 +54,15 @@ class CPPServer:
         })
 
     async def _main(self):
+        sleep_length = config.get("cpp.heartbeat_interval")
+
         while True:
             await self.heartbeat()
-            await asyncio.sleep(config.get("cpp.heartbeat_interval"))
+            await asyncio.sleep(sleep_length)
 
     def start(self, loop):
-        asyncio.ensure_future(self._main())
+        self.task = asyncio.ensure_future(self._main())
+
+    def stop(self, loop):
+        if not self.task.cancelled():
+            self.task.set_result(None)
