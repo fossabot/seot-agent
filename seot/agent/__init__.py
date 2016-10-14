@@ -5,6 +5,8 @@ import logging.config
 from seot.agent import config
 from seot.agent import dpp
 from seot.agent import cpp
+from seot.agent.util import configure_logging, log_startup_message
+from transitions import Machine
 import uvloop
 
 
@@ -13,76 +15,42 @@ __version__ = "0.0.1"
 logger = logging.getLogger(__name__)
 
 
-def log_startup_message():
-    logger.info("This is SEoT Agent version {0}".format(__version__))
-    logger.info("Device ID: {0}".format(config.get_state("device_id")))
-    logger.info("Owner of this device: {0}".format(
-        config.get("device.user_id")
-    ))
-    logger.info("Device type: {0}".format(config.get("device.type")))
-    logger.info("Device coordinate: ({0}, {1})".format(
-        config.get("device.coordinate.longitude"),
-        config.get("device.coordinate.latitude")
-    ))
-    logger.info("Heartbeat interval: {0}s".format(
-        config.get("cpp.heartbeat_interval"))
-    )
+class Agent():
+    states = ["init", "idle"]
 
+    def __init__(self):
+        self.machine = Machine(model=self, states=self.__class__.states,
+                               initial="init")
+        self.machine.add_transition(trigger="init", source="init", dest="idle")
 
-async def main_loop():
-    while True:
-        await cpp.heartbeat()
-        await asyncio.sleep(config.get("cpp.heartbeat_interval"))
+        self.loop = asyncio.get_event_loop()
+        self.cpp_server = cpp.CPPServer()
+        self.dpp_server = dpp.DPPServer()
+
+    def run(self):
+        self.cpp_server.start(self.loop)
+        self.dpp_server.start(self.loop)
+
+        # Run main event loop
+        logger.info("Starting main event loop...")
+        try:
+            self.loop.run_forever()
+        finally:
+            self.loop.close()
 
 
 def main():
-    # Configure logging and enable colorlog
-    logging.config.dictConfig({
-        "version": 1,
-        "formatters": {
-            "colored": {
-                "()": "colorlog.ColoredFormatter",
-                "format": "%(log_color)s[%(levelname)s] "
-                          + "%(fg_white)s[%(name)s]: %(message)s"
-            },
-        },
-        "handlers": {
-            "default": {
-                "class": "colorlog.StreamHandler",
-                "level": "INFO",
-                "formatter": "colored"
-            }
-        },
-        "root": {
-            "level": "INFO",
-            "handlers": ["default"],
-        },
-        "disable_existing_loggers": False,
-    })
+    # Initialize logging
+    configure_logging()
+
+    # Load configs
+    config.load()
+
+    # Print startup message
+    log_startup_message()
 
     # Use uvloop as event loop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-    # Initalize config component
-    config.init()
-
-    # Print diagnostic messages
-    log_startup_message()
-
-    # Initialize dpp component
-    dpp.init()
-
-    # Initialize cpp component
-    cpp.init()
-
-    # Run main event loop
-    logger.info("Launching main event loop...")
-    loop = asyncio.get_event_loop()
-
-    dpp_server = dpp.DPPServer()
-    dpp_server.start(loop)
-
-    try:
-        loop.run_until_complete(main_loop())
-    finally:
-        loop.close()
+    agent = Agent()
+    agent.run()

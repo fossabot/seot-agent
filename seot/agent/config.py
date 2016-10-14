@@ -46,8 +46,8 @@ def get_state(key=None):
     return _state.get(key)
 
 
-def init():
-    """ Initialize configuration module """
+def load():
+    """ Load configurations from files """
     global _config
     global _state
 
