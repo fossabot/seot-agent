@@ -7,6 +7,9 @@ PoC code for the Sharing Economy of Things platform.
 - Python 3.5.x or later
 - pip
 - OpenSSL
+- (Optional) virtualenv
+- (Optional) direnv (2.5.0 or later)
+- (Optional) pythonz
 
 ## How to run
 
