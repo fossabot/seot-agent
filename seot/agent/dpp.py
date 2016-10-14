@@ -8,20 +8,21 @@ import envoy
 logger = logging.getLogger("dpp")
 logger.setLevel(logging.INFO)
 
-CERT_KEY_PATH = "cert/privkey.pem"
-CERT_PATH = "cert/cert.key"
+CERT_DIR_PATH = Path.home() / ".seot/cert"
+CERT_KEY_PATH = CERT_DIR_PATH / "privkey.pem"
+CERT_PATH = CERT_DIR_PATH / "cert.key"
 
 
 def cert_exists():
-    if not Path(CERT_PATH).is_file():
-        return False
-    if not Path(CERT_KEY_PATH).is_file():
+    if not Path(CERT_PATH).is_file() or not Path(CERT_KEY_PATH).is_file():
         return False
 
     return True
 
 
 def generate_cert():
+    CERT_DIR_PATH.mkdir(parents=True)
+
     r = envoy.run("which openssl")
     if r.status_code != 0 or r.std_out.strip() == "":
         logger.error("No openssl found in PATH")
@@ -50,12 +51,15 @@ def generate_cert():
         CERT_PATH, CERT_KEY_PATH
     ))
 
+    CERT_PATH.chmod(0o600)
+    CERT_KEY_PATH.chmod(0o600)
+
 
 def check_cert():
     logger.info("Checking certificate sanity")
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
     try:
-        context.load_cert_chain(CERT_PATH, CERT_KEY_PATH)
+        context.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
     except ssl.SSLError:
         logger.error("Certificate is broken")
         sys.exit(1)
