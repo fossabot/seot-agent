@@ -39,6 +39,7 @@ async def heartbeat():
 
     await _request("POST", "/heartbeat", data={
         "user_id": config.get("device.user_id"),
+        "device_id": config.get_state("device_id"),
         "device_type": config.get("device.type"),
         "longitude": config.get("device.coordinate.longitude"),
         "latitude": config.get("device.coordinate.latitude"),
