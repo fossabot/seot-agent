@@ -7,9 +7,9 @@ device:
     latitude: 135.5258597
 cpp:
   heartbeat_interval: 1
-  seot_server_api_ep: http://localhost:8000/api
+  base_url: http://localhost:8888/api
 dpp:
   listen_address: 0.0.0.0
   listen_port: 51423
 docker:
-  api_address: tcp://localhost:1234
+  base_url: tcp://localhost:1234
