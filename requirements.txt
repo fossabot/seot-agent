@@ -10,7 +10,6 @@ envoy==0.0.3
 flake8==3.0.4
 flake8-double-quotes==0.0.1
 flake8-import-order==0.9.2
-kaptan==0.5.8
 mccabe==0.5.2
 msgpack-python==0.4.8
 multidict==2.1.2
