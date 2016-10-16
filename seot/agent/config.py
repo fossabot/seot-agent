@@ -12,6 +12,13 @@ CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
 SEOT_DIR_PATH = Path.home() / ".local/share/seot"
 STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
 
+REQUIRED_KEYS = [
+    "device.user_id",
+    "device.type",
+    "device.coordinate.longitude",
+    "device.coordinate.latitude"
+]
+
 logger = logging.getLogger(__name__)
 _config = {
     "cpp": {
@@ -88,18 +95,10 @@ def _merge_dict(dst, src):
 def _validate_config():
     failed = False
 
-    if get("device.user_id") is None:
-        logger.error("device.user_id is a required config value")
-        failed = True
-    if get("device.type") is None:
-        logger.error("device.type is a required config value")
-        failed = True
-    if get("device.coordinate.longitude") is None:
-        logger.error("device.coordinate.longitude is a required config value")
-        failed = True
-    if get("device.coordinate.latitude") is None:
-        logger.error("device.coordinate.latitude is a required config value")
-        failed = True
+    for key in REQUIRED_KEYS:
+        if get(key) is None:
+            logger.error("{0} is a required config key".format(key))
+            failed = True
 
     if failed:
         sys.exit(1)
