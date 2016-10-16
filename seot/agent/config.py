@@ -7,8 +7,8 @@ import kaptan
 
 from seot import agent
 
-CONFIG_FILE_PATH = Path("conf/config.yml")
-SEOT_DIR_PATH = Path.home() / ".seot"
+CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
+SEOT_DIR_PATH = Path.home() / ".local/share/seot"
 STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
 
 logger = logging.getLogger(__name__)

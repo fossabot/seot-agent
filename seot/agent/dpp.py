@@ -10,7 +10,7 @@ from seot.agent import config
 
 logger = logging.getLogger(__name__)
 
-CERT_DIR_PATH = Path.home() / ".seot/cert"
+CERT_DIR_PATH = Path.home() / ".local/share/seot/cert"
 CERT_KEY_PATH = CERT_DIR_PATH / "privkey.pem"
 CERT_PATH = CERT_DIR_PATH / "cert.key"
 
