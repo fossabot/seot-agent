@@ -1,4 +1,5 @@
 import logging
+import platform
 import sys
 import uuid
 from pathlib import Path
@@ -27,7 +28,10 @@ _config = {
 _state = {}
 
 
-def _get(config, key):
+def _get(config, key=None):
+    if key is None:
+        return config
+
     current = config
 
     for component in key.split("."):
@@ -128,3 +132,25 @@ def load():
             sys.exit(1)
 
     _validate_config()
+
+
+def discover_fact():
+    """ Discover various platform information """
+    kernel = platform.system()
+    os_dist = "unknown"
+    if kernel == "Darwin":
+        os_dist = platform.mac_ver()[0]
+    elif kernel == "Linux":
+        os_dist = " ".join(platform.linux_distribution())
+
+    _config["fact"] = {
+        "agent_version": agent.__version__,
+        "arch": platform.machine(),
+        "processor": platform.processor(),
+        "python": " ".join([
+            platform.python_implementation(),
+            platform.python_version()
+        ]),
+        "kernel": kernel,
+        "os": os_dist
+    }

@@ -53,6 +53,9 @@ def main():
     # Load configs
     config.load()
 
+    # Discover platform information
+    config.discover_fact()
+
     # Print startup message
     log_startup_message()
 
