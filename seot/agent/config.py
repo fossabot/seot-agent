@@ -1,3 +1,4 @@
+import getpass
 import logging
 import platform
 import sys
@@ -152,5 +153,6 @@ def discover_fact():
             platform.python_version()
         ]),
         "kernel": kernel,
-        "os": os_dist
+        "os": os_dist,
+        "user": getpass.getuser()
     }
