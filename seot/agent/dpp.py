@@ -19,6 +19,9 @@ SINKS = {
     "mongodb": MongoDBSink
 }
 
+SOURCES = {
+}
+
 
 class DPPServer:
     def __init__(self):
@@ -36,6 +39,13 @@ class DPPServer:
             if typ not in SINKS:
                 continue
             self.sinks.append(SINKS[typ](**conf))
+
+        # Load sources
+        self.sources = []
+        for typ, conf in config.get("sources").items():
+            if typ not in SOURCES:
+                continue
+            self.sources.append(SOURCES[typ](**conf))
 
     def _get_peer_addr(self, writer):
         """ Get address of peer """
