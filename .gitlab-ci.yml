@@ -1,7 +1,13 @@
 image: python:3
 
 before_script:
+  - export PIP_CACHE_DIR=".pip-cache"
   - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+cache:
+  paths:
+    - .pip-cache
 
 stages:
   - test
@@ -9,5 +15,4 @@ stages:
 test_job:
   stage: test
   script:
-    - pip install -r requirements.txt
     - flake8
