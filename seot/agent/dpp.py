@@ -94,6 +94,11 @@ class DPPServer:
     def start(self, loop):
         """ Start TLS server """
 
+        for sink in self.sinks:
+            loop.run_until_complete(sink.prepare())
+        for source in self.sources:
+            loop.run_until_complete(source.prepare())
+
         ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_ctx.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
 
@@ -114,6 +119,11 @@ class DPPServer:
             self.server.close()
             loop.run_until_complete(self.server.wait_closed())
             self.server = None
+
+        for sink in self.sinks:
+            loop.run_until_complete(sink.cleanup())
+        for source in self.sources:
+            loop.run_until_complete(source.cleanup())
 
 
 def _cert_exists():

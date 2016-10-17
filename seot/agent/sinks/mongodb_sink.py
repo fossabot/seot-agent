@@ -3,6 +3,7 @@ import logging
 
 
 import motor.motor_asyncio
+from pymongo.errors import ConnectionFailure
 from seot.agent.sinks import BaseSink
 
 logger = logging.getLogger(__name__)
@@ -31,4 +32,24 @@ class MongoDBSink(BaseSink):
             return data
 
     async def write(self, data):
-        await self.collection.insert(self._decode(data))
+        try:
+            await self.collection.insert(self._decode(data))
+        except ConnectionFailure as e:
+            logger.error("Connection error: {0}".format(e))
+
+    async def prepare(self):
+        successful = False
+        try:
+            successful = await self.client.admin.command("ping")
+        except ConnectionFailure as e:
+            logger.error("Connection error: {0}".format(e))
+            successful = False
+
+        if successful:
+            logger.info("Connected to MongoDB")
+        else:
+            logger.error("Failed to connect to MongoDB")
+
+    async def cleanup(self):
+        logger.info("Disconnecting from MongoDB")
+        self.client.close()

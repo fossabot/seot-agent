@@ -6,8 +6,10 @@ class BaseSource(metaclass=ABCMeta):
     async def read(self):
         pass
 
+    @abstractmethod
     async def prepare(self):
         pass
 
+    @abstractmethod
     async def cleanup(self):
         pass
