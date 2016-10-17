@@ -13,7 +13,7 @@ PoC code for the Sharing Economy of Things platform.
 
 ## How to run
 
-1. Copy `config.yml.sample` to `~/.config/seot/config.yml` and modify config
+1. Copy `config.yml.sample` to `~/.config/seot/config.yml` and adjust config
    values.
 2. Optionally, use direnv and virtualenv to create an isolated environment.
 3. Install dependencies: `pip install -r requirements.txt`
