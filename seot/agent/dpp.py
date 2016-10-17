@@ -7,12 +7,17 @@ from pathlib import Path
 import envoy
 import msgpack
 from seot.agent import config
+from seot.agent.sinks.mongodb_sink import MongoDBSink
 
 logger = logging.getLogger(__name__)
 
 CERT_DIR_PATH = Path.home() / ".local/share/seot/cert"
 CERT_KEY_PATH = CERT_DIR_PATH / "privkey.pem"
 CERT_PATH = CERT_DIR_PATH / "cert.key"
+
+SINKS = {
+    "mongodb": MongoDBSink
+}
 
 
 class DPPServer:
@@ -23,8 +28,14 @@ class DPPServer:
 
         if not _cert_exists():
             _generate_cert()
-
         _check_cert()
+
+        # Load sinks
+        self.sinks = []
+        for typ, conf in config.get("sinks").items():
+            if typ not in SINKS:
+                continue
+            self.sinks.append(SINKS[typ](**conf))
 
     def _get_peer_addr(self, writer):
         """ Get address of peer """
@@ -67,6 +78,8 @@ class DPPServer:
             unpacker.feed(data)
             for msg in unpacker:
                 logger.info("Received DPP message: {0}".format(msg))
+                for sink in self.sinks:
+                    await sink.write(msg)
 
     def start(self, loop):
         """ Start TLS server """

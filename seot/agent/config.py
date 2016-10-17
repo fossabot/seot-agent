@@ -24,21 +24,21 @@ _config = {
     "agent": {
     },
     "cpp": {
-        "heartbeat_interval": "60",
+        "heartbeat_interval": 60,
         "base_url": "http://localhost:8888/api"
     },
     "dpp": {
         "listen_address": "0.0.0.0",
         "listen_port": "51423"
     },
-    "source": {
-    },
-    "transformer": {
-        "type": "docker",
-        "url": "tcp://localhost:2375"
-    },
-    "sink": {
-    },
+    "sources": {},
+    "transformers": [
+        {
+            "type": "docker",
+            "url": "tcp://localhost:2375"
+        }
+    ],
+    "sinks": {}
 }
 _state = {}
 
