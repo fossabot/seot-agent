@@ -21,6 +21,8 @@ REQUIRED_KEYS = [
 
 logger = logging.getLogger(__name__)
 _config = {
+    "device": {
+    },
     "cpp": {
         "heartbeat_interval": "60",
         "base_url": "http://localhost:8888/api"
@@ -29,9 +31,14 @@ _config = {
         "listen_address": "0.0.0.0",
         "listen_port": "51423"
     },
-    "docker": {
-        "base_url": "tcp://localhost:1234"
-    }
+    "source": {
+    },
+    "transformer": {
+        "type": "docker",
+        "url": "tcp://localhost:2375"
+    },
+    "sink": {
+    },
 }
 _state = {}
 

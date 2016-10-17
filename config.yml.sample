@@ -1,7 +1,7 @@
 ---
 device:
   user_id: keichi
-  type: sensor
+  type: source
   coordinate:
     longitude: 34.8222789
     latitude: 135.5258597
@@ -11,5 +11,6 @@ cpp:
 dpp:
   listen_address: 0.0.0.0
   listen_port: 51423
-docker:
-  base_url: tcp://localhost:1234
+transformer:
+  type: docker
+  url: tcp://localhost:2375
