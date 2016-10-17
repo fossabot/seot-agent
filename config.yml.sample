@@ -1,5 +1,5 @@
 ---
-device:
+agent:
   user_id: keichi
   type: source
   coordinate:

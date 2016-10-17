@@ -13,15 +13,15 @@ SEOT_DIR_PATH = Path.home() / ".local/share/seot"
 STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
 
 REQUIRED_KEYS = [
-    "device.user_id",
-    "device.type",
-    "device.coordinate.longitude",
-    "device.coordinate.latitude"
+    "agent.user_id",
+    "agent.type",
+    "agent.coordinate.longitude",
+    "agent.coordinate.latitude"
 ]
 
 logger = logging.getLogger(__name__)
 _config = {
-    "device": {
+    "agent": {
     },
     "cpp": {
         "heartbeat_interval": "60",
@@ -73,10 +73,10 @@ def _init_state():
     if not SEOT_DIR_PATH.exists():
         SEOT_DIR_PATH.mkdir(parents=True)
 
-    logger.info("Generating device UUID")
-    _state["device_id"] = str(uuid.uuid4())
-    logger.info("Successfully generated device UUID: {0}".format(
-        _state.get("device_id")
+    logger.info("Generating agent UUID")
+    _state["agent_id"] = str(uuid.uuid4())
+    logger.info("Successfully generated agent UUID: {0}".format(
+        _state.get("agent_id")
     ))
     _state["version"] = agent.__version__
 

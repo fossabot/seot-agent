@@ -18,14 +18,14 @@ def log_startup_message():
     |____/|_____\___/|_|    Agent v{0}
     """.format(agent.__version__)
     logger.info(banner)
-    logger.info("Device ID: {0}".format(config.get_state("device_id")))
-    logger.info("Device owner: {0}".format(
-        config.get("device.user_id")
+    logger.info("Agent ID: {0}".format(config.get_state("agent_id")))
+    logger.info("Agent owner: {0}".format(
+        config.get("agent.user_id")
     ))
-    logger.info("Device type: {0}".format(config.get("device.type")))
-    logger.info("Device coordinate: ({0}, {1})".format(
-        config.get("device.coordinate.longitude"),
-        config.get("device.coordinate.latitude")
+    logger.info("Agent type: {0}".format(config.get("agent.type")))
+    logger.info("Agent coordinate: ({0}, {1})".format(
+        config.get("agent.coordinate.longitude"),
+        config.get("agent.coordinate.latitude")
     ))
     logger.info("Heartbeat interval: {0}s".format(
         config.get("cpp.heartbeat_interval"))

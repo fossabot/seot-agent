@@ -45,11 +45,11 @@ class CPPServer:
         logger.info("Sending heartbeat to SEoT server...")
 
         await self._request("POST", "/heartbeat", data={
-            "user_id": config.get("device.user_id"),
-            "device_id": config.get_state("device_id"),
-            "device_type": config.get("device.type"),
-            "longitude": config.get("device.coordinate.longitude"),
-            "latitude": config.get("device.coordinate.latitude"),
+            "user_id": config.get("agent.user_id"),
+            "agent_id": config.get_state("agent_id"),
+            "agent_type": config.get("agent.type"),
+            "longitude": config.get("agent.coordinate.longitude"),
+            "latitude": config.get("agent.coordinate.latitude"),
             "dpp_listen_port": config.get("dpp.listen_port"),
             "timestamp": time.time()
         })
