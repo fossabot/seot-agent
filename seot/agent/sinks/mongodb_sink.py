@@ -46,7 +46,9 @@ class MongoDBSink(BaseSink):
             successful = False
 
         if successful:
-            logger.info("Connected to MongoDB")
+            logger.info("Connected to MongoDB at {0}:{1}".format(
+                self.client.host, self.client.port
+            ))
         else:
             logger.error("Failed to connect to MongoDB")
 
