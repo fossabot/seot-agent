@@ -55,6 +55,8 @@ class DPPServer:
         task.add_done_callback(client_done)
 
     async def _handle_client(self, reader, writer):
+        unpacker = msgpack.Unpacker()
+
         """ Handle requests from individual clients """
         while True:
             data = await reader.read()
@@ -62,8 +64,9 @@ class DPPServer:
             if not data:
                 break
 
-            msg = msgpack.unpackb(data)
-            logger.info("Received DPP message: {0}".format(msg))
+            unpacker.feed(data)
+            for msg in unpacker:
+                logger.info("Received DPP message: {0}".format(msg))
 
     def start(self, loop):
         """ Start TLS server """
