@@ -31,3 +31,5 @@ PoC code for the Sharing Economy of Things platform.
     building seot-dpp messages. Use in conjunction with openssl.
 - [mock-server](https://github.com/tomashanacek/mock-server): For mocking the
     seot-server.
+- [MongoDB Compass](https://www.mongodb.com/products/compass?jmp=docs): For
+  exploring data stored in MongoDB.
