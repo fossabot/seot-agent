@@ -51,7 +51,7 @@ class CPPServer:
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "dpp_listen_port": config.get("dpp.listen_port"),
-            "timestamp": time.time()
+            "timestamp": int(time.time())
         })
 
     async def _main(self):
