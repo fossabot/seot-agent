@@ -13,11 +13,19 @@ PoC code for the Sharing Economy of Things platform.
 
 ## How to run
 
-1. Optionally, use direnv and virtualenv to create an isolated environment.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Launch SEoT Agent: `python -m seot.agent`
+1. Copy `config.yml.sample` to `~/.config/seot/config.yml` and modify config
+   values.
+2. Optionally, use direnv and virtualenv to create an isolated environment.
+3. Install dependencies: `pip install -r requirements.txt`
+4. Launch SEoT Agent: `python -m seot.agent`
 
-## Recommended tools during develop
+## How to package
+
+1. Build wheel file: `python setup.py bdist_wheel`
+2. Wheel file is generated under `dist/`.
+3. (Run `pip install dist/*.whl` to install wheel)
+
+## Recommended tools during development
 
 - [msgpack-tools](https://github.com/zweifisch/msgpack-tool): For parsing and
     building seot-dpp messages. Use in conjunction with openssl.
