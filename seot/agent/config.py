@@ -67,11 +67,11 @@ def _init_state():
         SEOT_DIR_PATH.mkdir(parents=True)
 
     logger.info("Generating device UUID")
-    _state.upsert("device_id", str(uuid.uuid4()))
+    _state["device_id"] = str(uuid.uuid4())
     logger.info("Successfully generated device UUID: {0}".format(
         _state.get("device_id")
     ))
-    _state.upsert("version", agent.__version__)
+    _state["version"] = agent.__version__
 
     save_state()
 
@@ -130,6 +130,8 @@ def load():
         except:
             logger.error("Failed to load state")
             sys.exit(1)
+    else:
+        _init_state()
 
     _validate_config()
 
