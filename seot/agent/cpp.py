@@ -65,5 +65,5 @@ class CPPServer:
         self.task = asyncio.ensure_future(self._main())
 
     def stop(self, loop):
-        if not self.task.cancelled():
+        if not self.task.cancelled() and not self.task.done():
             self.task.set_result(None)
