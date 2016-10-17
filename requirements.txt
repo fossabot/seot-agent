@@ -10,14 +10,16 @@ envoy==0.0.3
 flake8==3.0.4
 flake8-double-quotes==0.0.1
 flake8-import-order==0.9.2
+greenlet==0.4.10
 mccabe==0.5.2
+motor==0.6.2
 msgpack-python==0.4.8
 multidict==2.1.2
 pep8-naming==0.4.1
 pycares==2.1.1
 pycodestyle==2.0.0
 pyflakes==1.2.3
-pymongo==3.3.0
+pymongo==2.8
 PyYAML==3.12
 requests==2.10.0
 six==1.10.0
