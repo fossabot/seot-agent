@@ -50,6 +50,7 @@ class CPPServer:
             "device_type": config.get("device.type"),
             "longitude": config.get("device.coordinate.longitude"),
             "latitude": config.get("device.coordinate.latitude"),
+            "dpp_listen_port": config.get("dpp.listen_port"),
             "timestamp": time.time()
         })
 
