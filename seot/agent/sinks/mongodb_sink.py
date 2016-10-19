@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 class MongoDBSink(BaseSink):
     def __init__(self, host="localhost", port=27017, database=None,
-                 collection=None):
+                 collection=None, **kwargs):
+        super().__init__(**kwargs)
         self.client = motor.motor_asyncio.AsyncIOMotorClient(host, port)
 
         if database is None:
@@ -32,7 +33,7 @@ class MongoDBSink(BaseSink):
         else:
             return data
 
-    async def write(self, data):
+    async def _process(self, data):
         try:
             await self.collection.insert(self._decode(data))
         except ConnectionFailure as e:
