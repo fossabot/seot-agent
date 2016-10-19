@@ -114,6 +114,15 @@ class BaseTransformer(BaseSource, BaseSink):
             self._queue.task_done()
 
 
+class LambdaTransformer(BaseTransformer):
+    def __init(self, func, **kwargs):
+        super().__init__(**kwargs)
+        self.func = func
+
+    async def _process(self, data):
+        return self.func(data)
+
+
 class ConstSource(BaseSource):
     def __init__(self, const, interval, **kwargs):
         super().__init__(**kwargs)
@@ -183,10 +192,9 @@ if __name__ == "__main__":
     source.connect(transformer).connect(sink)
     source2.connect(transformer)
 
-    dag = DAG(source, source2)
-
     loop = asyncio.get_event_loop()
 
+    dag = DAG(source, source2)
     try:
         dag.run()
     except KeyboardInterrupt:
