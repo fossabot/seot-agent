@@ -9,15 +9,13 @@ logger = logging.getLogger(__name__)
 
 class Node(ABC):
     def __init__(self, name=None, loop=None):
-        if loop is None:
+        self.loop = loop
+        if self.loop is None:
             self.loop = asyncio.get_event_loop()
-        else:
-            self.loop = loop
 
-        if name is None:
+        self.name = name
+        if self.name is None:
             self.name = self.__class__.__name__
-        else:
-            self.name = name
 
         self._task = None
 
@@ -147,10 +145,9 @@ class DAG:
             self.sources.append(source)
         self.nodes = self._topological_sort(self.sources)
 
-        if loop is None:
+        self.loop = loop
+        if self.loop is None:
             self.loop = asyncio.get_event_loop()
-        else:
-            self.loop = loop
 
     def _topological_sort(self, sources):
         visited = set([])
