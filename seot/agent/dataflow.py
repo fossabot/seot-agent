@@ -120,7 +120,7 @@ class LambdaTransformer(BaseTransformer):
         self.func = func
 
     async def _process(self, data):
-        return self.func(data)
+        return await self.func(data)
 
 
 class ConstSource(BaseSource):
