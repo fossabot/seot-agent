@@ -1,13 +1,14 @@
 import asyncio
 import logging
 
-from seot.agent import config
-from seot.agent import dpp
-from seot.agent import cpp
-from seot.agent.util import configure_logging, log_startup_message
-from seot.agent.util import log_quit_message
 from transitions import Machine
 import uvloop
+
+from . import config
+from . import dpp
+from . import cpp
+from .util import configure_logging, log_startup_message
+from .util import log_quit_message
 
 
 __version__ = "0.0.1"

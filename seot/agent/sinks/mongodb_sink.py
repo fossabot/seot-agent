@@ -4,7 +4,8 @@ import logging
 
 import motor.motor_asyncio
 from pymongo.errors import ConnectionFailure
-from seot.agent.sinks import BaseSink
+
+from . import BaseSink
 
 logger = logging.getLogger(__name__)
 

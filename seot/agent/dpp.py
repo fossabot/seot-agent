@@ -6,8 +6,9 @@ from pathlib import Path
 
 import envoy
 import msgpack
-from seot.agent import config
-from seot.agent.sinks.mongodb_sink import MongoDBSink
+
+from . import config
+from .sinks.mongodb_sink import MongoDBSink
 
 logger = logging.getLogger(__name__)
 

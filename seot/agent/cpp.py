@@ -6,7 +6,7 @@ from aiodns.error import DNSError
 import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 
-from seot.agent import config
+from . import config
 
 logger = logging.getLogger(__name__)
 

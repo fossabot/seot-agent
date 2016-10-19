@@ -2,7 +2,7 @@ import logging
 import logging.config
 
 from seot import agent
-from seot.agent import config
+from . import config
 
 logger = logging.getLogger(__name__)
 
