@@ -1,10 +1,24 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
+from collections import deque
 from contextlib import suppress
+
+logger = logging.getLogger(__name__)
 
 
 class Node(ABC):
-    def __init__(self):
+    def __init__(self, name=None, loop=None):
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
+        else:
+            self.loop = loop
+
+        if name is None:
+            self.name = self.__class__.__name__
+        else:
+            self.name = name
+
         self._task = None
 
     @abstractmethod
@@ -20,13 +34,17 @@ class Node(ABC):
         if self.running():
             raise RuntimeError("Node is already running")
 
-        self._task = asyncio.ensure_future(self._run())
+        logger.info("Starting " + self.__class__.__name__ + " " + self.name)
+
+        self._task = asyncio.ensure_future(self._run(), loop=self.loop)
 
         return self._task
 
     def stop(self):
         if not self.running():
             raise RuntimeError("Node is not running")
+
+        logger.info("Stopping " + self.__class__.__name__ + " " + self.name)
 
         self._task.cancel()
 
@@ -38,11 +56,14 @@ class Node(ABC):
     async def cleanup(self):
         pass
 
+    def next_nodes(self):
+        return []
+
 
 class BaseSink(Node):
-    def __init__(self):
-        super().__init__()
-        self._queue = asyncio.Queue()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._queue = asyncio.Queue(loop=self.loop)
 
     async def write(self, data):
         await self._queue.put(data)
@@ -59,47 +80,29 @@ class BaseSink(Node):
 
 
 class BaseSource(Node):
-    def __init__(self):
-        super().__init__()
-        self._outputs = []
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._next_nodes = []
 
     def connect(self, node):
         if not isinstance(node, BaseSink):
             raise ValueError("Expected a sink")
 
-        self._outputs.append(node)
+        self._next_nodes.append(node)
 
         return node
 
     async def _emit(self, data):
-        await asyncio.wait([node.write(data) for node in self._outputs])
+        await asyncio.wait([node.write(data) for node in self._next_nodes],
+                           loop=self.loop)
 
-    def start(self):
-        # Start myself
-        super().start()
-
-        # Start connected nodes
-        for node in self._outputs:
-            if node.running():
-                continue
-            node.start()
-
-    def stop(self):
-        # Stop myself
-        pending = [super().stop()]
-
-        # Stop connected nodes
-        for node in self._outputs:
-            if node.running():
-                continue
-            pending.append(node.stop())
-
-        return asyncio.ensure_future(asyncio.wait(pending))
+    def next_nodes(self):
+        return self._next_nodes
 
 
 class BaseTransformer(BaseSource, BaseSink):
-    def __init(self):
-        super().__init__()
+    def __init(self, **kwargs):
+        super().__init__(**kwargs)
 
     @abstractmethod
     async def _process(self, data):
@@ -114,8 +117,8 @@ class BaseTransformer(BaseSource, BaseSink):
 
 
 class ConstSource(BaseSource):
-    def __init__(self, const, interval):
-        super().__init__()
+    def __init__(self, const, interval, **kwargs):
+        super().__init__(**kwargs)
         self.const = const
         self.interval = interval
 
@@ -135,23 +138,61 @@ class IdentityTransformer(BaseTransformer):
         return data
 
 
+class DAG:
+    def __init__(self, *args, loop=None):
+        self.sources = []
+        for source in args:
+            if not isinstance(source, BaseSource):
+                raise ValueError("Expected a source")
+            self.sources.append(source)
+        self.nodes = self._topological_sort(self.sources)
+
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
+        else:
+            self.loop = loop
+
+    def _topological_sort(self, sources):
+        visited = set([])
+        result = deque([])
+
+        def visit(node):
+            if node in visited:
+                return
+            visited.add(node)
+            for next_node in node.next_nodes():
+                visit(next_node)
+            result.appendleft(node)
+
+        for node in sources:
+            visit(node)
+
+        return list(result)
+
+    def run(self):
+        tasks = [node.start() for node in self.nodes]
+        self.loop.run_until_complete(asyncio.wait(tasks))
+
+    def stop(self):
+        tasks = [node.stop() for node in self.nodes]
+        with suppress(asyncio.CancelledError):
+            self.loop.run_until_complete(asyncio.wait(tasks))
+
 if __name__ == "__main__":
-    sink = DebugSink()
-    source = ConstSource(123, 1)
-    source2 = ConstSource("hogeppi", 2)
-    transformer = IdentityTransformer()
+    sink = DebugSink(name="debug")
+    source = ConstSource(123, 1, name="foo")
+    source2 = ConstSource("hogeppi", 2, name="hoge")
+    transformer = IdentityTransformer(name="identity")
     source.connect(transformer).connect(sink)
     source2.connect(transformer)
 
+    dag = DAG(source, source2)
+
     loop = asyncio.get_event_loop()
+
     try:
-        source.start()
-        source2.start()
-        loop.run_forever()
+        dag.run()
     except KeyboardInterrupt:
-        t1 = source.stop()
-        t2 = source2.stop()
-        with suppress(asyncio.CancelledError):
-            loop.run_until_complete(asyncio.wait([t1, t2]))
+        dag.stop()
 
     loop.close()
