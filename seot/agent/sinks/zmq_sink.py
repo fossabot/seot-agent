@@ -16,7 +16,15 @@ class ZMQSink(BaseSink):
 
     async def startup(self):
         self.sock = self.ctx.socket(zmq.PUSH)
+        self.sock.setsockopt(zmq.LINGER, 100)
+        logger.info("Connecting to ZMQ peer at {0}".format(self.url))
         self.sock.connect(self.url)
+
+    async def cleanup(self):
+        self.sock.close()
+        logger.info("Closed ZMQ socket")
+        self.ctx.term()
+        logger.info("Terminated ZMQ context")
 
     async def _process(self, data):
         self.sock.send_json(data)
