@@ -1,6 +1,5 @@
 import logging
 
-import msgpack
 import zmq
 import zmq.asyncio
 
@@ -17,6 +16,7 @@ class ZMQSource(BaseSource):
 
     async def startup(self):
         self.sock = self.ctx.socket(zmq.PULL)
+        logger.info("ZMQ listening at {0}".format(self.url))
         self.sock.bind(self.url)
 
     async def _run(self):
