@@ -58,7 +58,7 @@ class Node(ABC):
         return []
 
 
-class DAG:
+class Dataflow:
     def __init__(self, *args, loop=None):
         self.sources = []
         for source in args:

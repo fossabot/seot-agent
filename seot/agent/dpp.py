@@ -1,6 +1,6 @@
 import logging
 
-from .dataflow import DAG
+from .dataflow import Dataflow
 from .sinks import DebugSink
 from .sinks.mongodb_sink import MongoDBSink
 from .sources.remote_source import RemoteSource
@@ -14,7 +14,7 @@ class DPPServer:
         src.connect(DebugSink())
         src.connect(MongoDBSink(database="seot", collection="test"))
 
-        self.dag = DAG(src)
+        self.dag = Dataflow(src)
 
     def start(self, loop):
         self.dag.run()
