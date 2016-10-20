@@ -8,7 +8,15 @@ logger = logging.getLogger(__name__)
 
 
 class Node(ABC):
+    """
+    Abstract base class of all dataflow nodes
+    """
     def __init__(self, name=None, loop=None):
+        """
+        Initilize this node. Optional argument name specifies a human-readable
+        name of this node. Use argument loop to specify the asyncio event loop
+        on which this node is executed.
+        """
         self.loop = loop
         if self.loop is None:
             self.loop = asyncio.get_event_loop()
@@ -21,14 +29,24 @@ class Node(ABC):
 
     @abstractmethod
     async def _run(self):
+        """
+        Coroutine performing the main task of this node. Must be overridden by
+        subclasses.
+        """
         pass
 
     def running(self):
+        """
+        Returns whether this node is running or not.
+        """
         if self._task is None:
             return False
         return not self._task.done()
 
     def start(self):
+        """
+        Start this dataflow node.
+        """
         if self.running():
             raise RuntimeError("Node is already running")
 
@@ -39,6 +57,9 @@ class Node(ABC):
         return self._task
 
     def stop(self):
+        """
+        Stop this dataflow node.
+        """
         if not self.running():
             raise RuntimeError("Node is not running")
 
@@ -49,17 +70,34 @@ class Node(ABC):
         return self._task
 
     async def startup(self):
+        """
+        Perform initializations required before starting this node.
+        """
         pass
 
     async def cleanup(self):
+        """
+        Perform cleanups required before starting this node.
+        """
         pass
 
     def next_nodes(self):
+        """
+        Return a list of dataflow nodes connected to this node.
+        """
         return []
 
 
 class Dataflow:
+    """
+    A directed acyclic graph composed of dataflow nodes
+    """
     def __init__(self, *args, loop=None):
+        """
+        Initialize this dataflow graph. Arguments specify the source nodes.
+        Optionally, use argument loop to specify the asyncio event loop on
+        which this node is executed.
+        """
         self.sources = []
         for source in args:
             if not isinstance(source, Node):
@@ -71,6 +109,9 @@ class Dataflow:
             self.loop = asyncio.get_event_loop()
 
     def _topological_sort(self, sources):
+        """
+        Return a list of dataflow nodes sorted in a topological order.
+        """
         pending = set([])
         permanent = set([])
         result = deque([])
@@ -91,6 +132,9 @@ class Dataflow:
         return list(result)
 
     def start(self):
+        """
+        Start this dataflow graph
+        """
         nodes = self._topological_sort(self.sources)
 
         tasks = [node.startup() for node in nodes]
@@ -100,6 +144,9 @@ class Dataflow:
         self.loop.run_until_complete(asyncio.wait(tasks))
 
     def stop(self):
+        """
+        Stop this dataflow graph
+        """
         nodes = self._topological_sort(self.sources)
 
         tasks = [node.stop() for node in nodes]
