@@ -68,7 +68,6 @@ class RemoteSource(BaseSource):
 
             unpacker.feed(data)
             for msg in unpacker:
-                logger.info("Received DPP message: {0}".format(msg))
                 await self._emit(msg)
 
     async def _run(self):

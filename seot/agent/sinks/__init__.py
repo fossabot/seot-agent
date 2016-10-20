@@ -27,5 +27,9 @@ class BaseSink(Node):
 
 
 class DebugSink(BaseSink):
+    def __init__(self, level=logging.INFO, **kwargs):
+        super().__init__(**kwargs)
+        self.level = level
+
     async def _process(self, data):
-        logger.debug(data)
+        logger.log(self.level, "{0} received: {1}".format(self.name, data))
