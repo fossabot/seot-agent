@@ -133,25 +133,29 @@ class Dataflow:
 
     def start(self):
         """
-        Start this dataflow graph
+        Start this dataflow graph. This method returns immediately and the
+        dataflow will be executed in a background task.
         """
         nodes = self._topological_sort(self.sources)
 
-        tasks = [node.startup() for node in nodes]
-        self.loop.run_until_complete(asyncio.wait(tasks))
+        async def start():
+            await asyncio.wait([node.startup() for node in nodes])
+            await asyncio.wait([node.start() for node in nodes])
 
-        tasks = [node.start() for node in nodes]
-        self.loop.run_until_complete(asyncio.wait(tasks))
+        asyncio.ensure_future(start())
 
     def stop(self):
         """
-        Stop this dataflow graph
+        Stop this dataflow graph. This method will block until the entire
+        dataflow is stopped.
         """
         nodes = self._topological_sort(self.sources)
 
+        # Request nodes to stop and wait until them top stop
         tasks = [node.stop() for node in nodes]
         with suppress(asyncio.CancelledError):
             self.loop.run_until_complete(asyncio.wait(tasks))
 
+        # Do cleanup tasks
         tasks = [node.cleanup() for node in nodes]
         self.loop.run_until_complete(asyncio.wait(tasks))

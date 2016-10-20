@@ -70,7 +70,7 @@ class RemoteSource(BaseSource):
             for msg in unpacker:
                 await self._emit(msg)
 
-    async def _run(self):
+    async def startup(self):
         ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_ctx.load_cert_chain(str(CERT_PATH), str(CERT_KEY_PATH))
 
@@ -79,15 +79,17 @@ class RemoteSource(BaseSource):
         logger.info("Launching DPP server at {0}:{1}".format(addr, port))
 
         self.server = await asyncio.streams.start_server(
-            self._accept_client, addr, port, ssl=ssl_ctx
+            self._accept_client, addr, port, ssl=ssl_ctx, loop=self.loop
         )
 
-    #  def stop(self, loop):
-        #  """ Stop TLS server """
-        #  if self.server is not None:
-            #  self.server.close()
-            #  loop.run_until_complete(self.server.wait_closed())
-            #  self.server = None
+    async def _run(self):
+        await self.server.wait_closed()
+
+    async def cleanup(self):
+        if self.server is not None:
+            self.server.close()
+            await self.server.wait_closed()
+            self.server = None
 
 
 def _cert_exists():
