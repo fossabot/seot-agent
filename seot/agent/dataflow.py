@@ -99,6 +99,9 @@ class Dataflow:
         which this node is executed.
         """
         self.sources = []
+        if not args:
+            raise ValueError("Expected at least one source node")
+
         for source in args:
             if not isinstance(source, Node):
                 raise ValueError("Expected a Node")
