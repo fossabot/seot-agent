@@ -65,23 +65,25 @@ class DAG:
             if not isinstance(source, Node):
                 raise ValueError("Expected a Node")
             self.sources.append(source)
-        self.nodes = self._topological_sort(self.sources)
 
         self.loop = loop
         if self.loop is None:
             self.loop = asyncio.get_event_loop()
 
     def _topological_sort(self, sources):
-        visited = set([])
+        pending = set([])
+        permanent = set([])
         result = deque([])
 
         def visit(node):
-            if node in visited:
-                return
-            visited.add(node)
-            for next_node in node.next_nodes():
-                visit(next_node)
-            result.appendleft(node)
+            if node in pending:
+                raise RuntimeError("Dataflow graph contains cycle")
+            elif node not in permanent:
+                pending.add(node)
+                for next_node in node.next_nodes():
+                    visit(next_node)
+                result.appendleft(node)
+                permanent.add(node)
 
         for node in sources:
             visit(node)
@@ -89,10 +91,14 @@ class DAG:
         return list(result)
 
     def run(self):
-        tasks = [node.start() for node in self.nodes]
+        nodes = self._topological_sort(self.sources)
+
+        tasks = [node.start() for node in nodes]
         self.loop.run_until_complete(asyncio.wait(tasks))
 
     def stop(self):
-        tasks = [node.stop() for node in self.nodes]
+        nodes = self._topological_sort(self.sources)
+
+        tasks = [node.stop() for node in nodes]
         with suppress(asyncio.CancelledError):
             self.loop.run_until_complete(asyncio.wait(tasks))
