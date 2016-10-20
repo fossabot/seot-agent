@@ -14,10 +14,10 @@ class DPPServer:
         src.connect(DebugSink())
         src.connect(MongoDBSink(database="seot", collection="test"))
 
-        self.dag = Dataflow(src)
+        self.dataflow = Dataflow(src)
 
     def start(self, loop):
-        self.dag.run()
+        self.dataflow.start()
 
     def stop(self, loop):
-        self.dag.stop()
+        self.dataflow.stop()

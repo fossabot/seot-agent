@@ -90,8 +90,11 @@ class Dataflow:
 
         return list(result)
 
-    def run(self):
+    def start(self):
         nodes = self._topological_sort(self.sources)
+
+        tasks = [node.startup() for node in nodes]
+        self.loop.run_until_complete(asyncio.wait(tasks))
 
         tasks = [node.start() for node in nodes]
         self.loop.run_until_complete(asyncio.wait(tasks))
@@ -102,3 +105,6 @@ class Dataflow:
         tasks = [node.stop() for node in nodes]
         with suppress(asyncio.CancelledError):
             self.loop.run_until_complete(asyncio.wait(tasks))
+
+        tasks = [node.cleanup() for node in nodes]
+        self.loop.run_until_complete(asyncio.wait(tasks))

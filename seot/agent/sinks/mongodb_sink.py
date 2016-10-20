@@ -39,7 +39,7 @@ class MongoDBSink(BaseSink):
         except ConnectionFailure as e:
             logger.error("Connection error: {0}".format(e))
 
-    async def prepare(self):
+    async def startup(self):
         successful = False
         try:
             successful = await self.client.admin.command("ping")
