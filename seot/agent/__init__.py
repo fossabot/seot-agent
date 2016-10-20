@@ -1,8 +1,7 @@
-import asyncio
 import logging
 
-from transitions import Machine
-import uvloop
+import asyncio
+import zmq.asyncio
 
 from . import config
 from . import dpp
@@ -20,10 +19,8 @@ class Agent():
     states = ["idle"]
 
     def __init__(self):
-        self.machine = Machine(model=self, states=self.__class__.states,
-                               initial="idle")
-
-        self.loop = asyncio.get_event_loop()
+        self.loop = zmq.asyncio.ZMQEventLoop()
+        asyncio.set_event_loop(self.loop)
         self.cpp_server = cpp.CPPServer()
         self.dpp_server = dpp.DPPServer()
 
@@ -59,9 +56,6 @@ def main():
 
     # Print startup message
     log_startup_message()
-
-    # Use uvloop as event loop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
     agent = Agent()
     agent.run()

@@ -35,7 +35,7 @@ class CPPServer:
                 logger.error("Socket error: [{0}] {1}".format(
                     e.errno, e.strerror
                 ))
-            except ClientTimeoutError:
+            except (ClientTimeoutError, asyncio.TimeoutError):
                 logger.error("Request timed out")
             except Exception as e:
                 logger.error("Unexpected error: {0}".format(e))

@@ -139,10 +139,12 @@ class Dataflow:
         nodes = self._topological_sort(self.sources)
 
         async def start():
-            await asyncio.wait([node.startup() for node in nodes])
-            await asyncio.wait([node.start() for node in nodes])
+            await asyncio.wait([node.startup() for node in nodes],
+                               loop=self.loop)
+            await asyncio.wait([node.start() for node in nodes],
+                               loop=self.loop)
 
-        asyncio.ensure_future(start())
+        asyncio.ensure_future(start(), loop=self.loop)
 
     def stop(self):
         """

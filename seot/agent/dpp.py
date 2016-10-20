@@ -3,14 +3,14 @@ import logging
 from .dataflow import Dataflow
 from .sinks import DebugSink
 from .sinks.mongodb_sink import MongoDBSink
-from .sources.remote_source import RemoteSource
+from .sources.zmq_source import ZMQSource
 
 logger = logging.getLogger(__name__)
 
 
 class DPPServer:
     def __init__(self):
-        src = RemoteSource()
+        src = ZMQSource("tcp://127.0.0.1:51423")
         src.connect(DebugSink())
         src.connect(MongoDBSink(database="seot", collection="test"))
 
