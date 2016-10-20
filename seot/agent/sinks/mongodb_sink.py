@@ -40,6 +40,7 @@ class MongoDBSink(BaseSink):
             logger.error("Connection error: {0}".format(e))
 
     async def startup(self):
+        logger.info("Trying to connect to MongoDB...")
         successful = False
         try:
             successful = await self.client.admin.command("ping")

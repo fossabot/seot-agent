@@ -27,8 +27,8 @@ class CPPServer:
                     status = resp.status
                     body = await resp.text()
 
-                    logger.info(status)
-                    logger.info(body)
+                    logger.info("Response status code: {0}".format(status))
+                    logger.info("Response body:\n{0}".format(body.strip()))
             except DNSError:
                 logger.error("Could not resolve name")
             except ClientOSError as e:
