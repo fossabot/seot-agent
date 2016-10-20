@@ -154,7 +154,7 @@ class Dataflow:
         nodes = self._topological_sort(self.sources)
 
         # Request nodes to stop and wait until them top stop
-        tasks = [node.stop() for node in nodes]
+        tasks = [node.stop() for node in nodes if node.running()]
         with suppress(asyncio.CancelledError):
             self.loop.run_until_complete(asyncio.wait(tasks))
 
