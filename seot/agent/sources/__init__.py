@@ -35,3 +35,11 @@ class ConstSource(BaseSource):
         while True:
             await self._emit(self.const)
             await asyncio.sleep(self.interval)
+
+
+class NullSource(BaseSource):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    async def _run(self):
+        pass

@@ -33,3 +33,11 @@ class DebugSink(BaseSink):
 
     async def _process(self, data):
         logger.log(self.level, "{0} received: {1}".format(self.name, data))
+
+
+class NullSink(BaseSink):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    async def _process(self, data):
+        pass
