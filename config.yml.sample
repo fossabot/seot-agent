@@ -5,3 +5,15 @@ agent:
   coordinate:
     longitude: 34.8222789
     latitude: 135.5258597
+
+nodes:
+  - module: seot.agent.sinks.zmq_sink
+    class: ZMQSink
+  - module: seot.agent.sinks.mongodb_sink
+    class: MongoDBSink
+  - module: seot.agent.sources.zmq_source
+    class: ZMQSource
+  - module: seot.agent.sinks
+    class: DebugSink
+  - module: seot.agent.sources
+    class: ConstSource
