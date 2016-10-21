@@ -1,3 +1,4 @@
+import copy
 import logging
 
 
@@ -24,7 +25,9 @@ class MongoDBSink(BaseSink):
 
     async def _process(self, data):
         try:
-            await self.collection.insert(self._decode(data))
+            # Need deepcopy here because db.collection.insert() modifies
+            # the object being inserted
+            await self.collection.insert(copy.deepcopy(data))
         except ConnectionFailure as e:
             logger.error("Connection error: {0}".format(e))
 
