@@ -2,7 +2,7 @@ import importlib
 import logging
 
 from . import config
-from .dataflow import Dataflow, Node
+from .dataflow import Graph, Node
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class DPPServer:
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 
-        self.dataflow = Dataflow(*sources)
+        self.dataflow = Graph(*sources)
 
     def start(self, loop):
         self.dataflow.start()

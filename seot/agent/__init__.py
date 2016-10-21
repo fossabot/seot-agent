@@ -3,7 +3,7 @@ import logging
 
 import zmq.asyncio
 
-from . import config, cpp, dpp
+from . import config, cpp, dataflow_builder
 from .util import configure_logging, log_startup_message
 from .util import log_quit_message
 
@@ -14,13 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class Agent():
-    states = ["idle"]
-
     def __init__(self):
         self.loop = zmq.asyncio.ZMQEventLoop()
         asyncio.set_event_loop(self.loop)
         self.cpp_server = cpp.CPPServer()
-        self.dpp_server = dpp.DPPServer()
+        self.dpp_server = dataflow_builder.DPPServer()
 
     def run(self):
         self.cpp_server.start(self.loop)
