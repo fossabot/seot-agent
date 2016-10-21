@@ -1,5 +1,7 @@
+import collections
 import logging
 
+import msgpack
 import zmq
 import zmq.asyncio
 
@@ -27,5 +29,16 @@ class ZMQSink(BaseSink):
         self.ctx.term()
         logger.info("Terminated ZMQ context")
 
-    async def _process(self, data):
-        self.sock.send_json(data)
+    def _encode(self, data):
+        if isinstance(data, str):
+            return data.encode("utf-8")
+        elif isinstance(data, collections.Mapping):
+            return dict(map(self._encode, data.items()))
+        elif isinstance(data, collections.Iterable):
+            return type(data)(map(self._encode, data))
+        else:
+            return data
+
+    async def _process(self, msg):
+        data = msgpack.packb(self._encode(msg))
+        self.sock.send(data)

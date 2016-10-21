@@ -1,9 +1,33 @@
 import argparse
+import collections
 import json
 import sys
 
+import msgpack
 from pygments import formatters, highlight, lexers
 import zmq
+
+
+def _encode(data):
+    if isinstance(data, str):
+        return data.encode("utf-8")
+    elif isinstance(data, collections.Mapping):
+        return dict(map(_encode, data.items()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(_encode, data))
+    else:
+        return data
+
+
+def _decode(data):
+    if isinstance(data, bytes):
+        return data.decode("utf-8")
+    elif isinstance(data, collections.Mapping):
+        return dict(map(_decode, data.items()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(_decode, data))
+    else:
+        return data
 
 
 def read(args):
@@ -13,7 +37,7 @@ def read(args):
     sock.bind(args.address)
 
     while True:
-        data = sock.recv_json()
+        data = _decode(msgpack.unpackb(sock.recv()))
         formatted_json = json.dumps(data, indent=4)
         colorful_json = highlight(formatted_json, lexers.JsonLexer(),
                                   formatters.TerminalFormatter())
@@ -28,7 +52,7 @@ def write(args):
 
     s = sys.stdin.read()
     obj = json.loads(s)
-    sock.send_json(obj)
+    sock.send(msgpack.packb(_encode(obj)))
 
 
 def main():

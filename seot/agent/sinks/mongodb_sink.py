@@ -1,4 +1,3 @@
-import collections
 import logging
 
 
@@ -22,16 +21,6 @@ class MongoDBSink(BaseSink):
             logger.error("collection is a required configuration key")
 
         self.collection = self.client[database][collection]
-
-    def _decode(self, data):
-        if isinstance(data, bytes):
-            return data.decode("utf-8")
-        elif isinstance(data, collections.Mapping):
-            return dict(map(self._decode, data.items()))
-        elif isinstance(data, collections.Iterable):
-            return type(data)(map(self._decode, data))
-        else:
-            return data
 
     async def _process(self, data):
         try:
