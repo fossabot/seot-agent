@@ -1,6 +1,8 @@
 import asyncio
+import json
 import logging
 from abc import abstractmethod
+from pygments import formatters, highlight, lexers
 
 from ..dataflow import Node
 
@@ -32,7 +34,11 @@ class DebugSink(BaseSink):
         self.level = level
 
     async def _process(self, data):
-        logger.log(self.level, "{0} received: {1}".format(self.name, data))
+        formatted_json = json.dumps(data, indent=4)
+        colorful_json = highlight(formatted_json, lexers.JsonLexer(),
+                                  formatters.TerminalFormatter())
+        logger.log(self.level, "{0} received:\n{1}".format(
+            self.name, colorful_json.strip()))
 
 
 class NullSink(BaseSink):
