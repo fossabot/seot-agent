@@ -124,18 +124,18 @@ class Dataflow:
         permanent = set([])
         result = deque([])
 
-        def visit(node):
+        def walk(node):
             if node in pending:
                 raise RuntimeError("Dataflow graph contains cycle")
             elif node not in permanent:
                 pending.add(node)
                 for next_node in node.next_nodes():
-                    visit(next_node)
+                    walk(next_node)
                 result.appendleft(node)
                 permanent.add(node)
 
         for node in sources:
-            visit(node)
+            walk(node)
 
         return list(result)
 

@@ -1,11 +1,9 @@
+import asyncio
 import logging
 
-import asyncio
 import zmq.asyncio
 
-from . import config
-from . import dpp
-from . import cpp
+from . import config, cpp, dpp
 from .util import configure_logging, log_startup_message
 from .util import log_quit_message
 

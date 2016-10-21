@@ -49,9 +49,7 @@ class DPPServer:
             sources.add(node)
 
         for node_def in graph_def:
-            if "to" not in node_def:
-                continue
-            for next_node in node_def["to"]:
+            for next_node in node_def.get("to", []):
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 

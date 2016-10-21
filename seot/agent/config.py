@@ -113,8 +113,7 @@ def _validate_config():
 
 def load():
     """ Load configurations from files """
-    global _config
-    global _state
+    global _config, _state
 
     if CONFIG_FILE_PATH.exists():
         try:
