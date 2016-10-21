@@ -9,14 +9,15 @@ logger = logging.getLogger(__name__)
 
 
 class ZMQSink(BaseSink):
-    def __init__(self, url="tcp://127.0.0.1:51423", **kwargs):
+    def __init__(self, url="tcp://127.0.0.1:51423", linger=100, **kwargs):
         super().__init__(**kwargs)
         self.url = url
+        self.linger = linger
         self.ctx = zmq.asyncio.Context()
 
     async def startup(self):
         self.sock = self.ctx.socket(zmq.PUSH)
-        self.sock.setsockopt(zmq.LINGER, 100)
+        self.sock.setsockopt(zmq.LINGER, self.linger)
         logger.info("Connecting to ZMQ peer at {0}".format(self.url))
         self.sock.connect(self.url)
 
