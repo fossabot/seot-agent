@@ -158,8 +158,9 @@ class Dataflow:
 
         # Request nodes to stop and wait until them top stop
         tasks = [node.stop() for node in nodes if node.running()]
-        with suppress(asyncio.CancelledError):
-            self.loop.run_until_complete(asyncio.wait(tasks))
+        if tasks:
+            with suppress(asyncio.CancelledError):
+                self.loop.run_until_complete(asyncio.wait(tasks))
 
         # Do cleanup tasks
         tasks = [node.cleanup() for node in nodes]

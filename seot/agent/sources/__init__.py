@@ -18,6 +18,8 @@ class BaseSource(Node):
         return node
 
     async def _emit(self, data):
+        if not self._next_nodes:
+            return
         await asyncio.wait([node.write(data) for node in self._next_nodes],
                            loop=self.loop)
 
