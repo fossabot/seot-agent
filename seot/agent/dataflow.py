@@ -165,8 +165,9 @@ class Graph:
         tasks = [node.stop() for node in nodes if node.running()]
         if tasks:
             with suppress(asyncio.CancelledError):
-                self.loop.run_until_complete(asyncio.wait(tasks))
+                task = asyncio.wait(tasks, loop=self.loop)
+                self.loop.run_until_complete(task)
 
         # Do cleanup tasks
         tasks = [node.cleanup() for node in nodes]
-        self.loop.run_until_complete(asyncio.wait(tasks))
+        self.loop.run_until_complete(asyncio.wait(tasks, loop=self.loop))

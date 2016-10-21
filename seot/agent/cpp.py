@@ -62,7 +62,7 @@ class CPPServer:
             await asyncio.sleep(sleep_length)
 
     def start(self, loop):
-        self.task = asyncio.ensure_future(self._main())
+        self.task = asyncio.ensure_future(self._main(), loop=loop)
 
     def stop(self, loop):
         if not self.task.cancelled() and not self.task.done():
