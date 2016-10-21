@@ -33,6 +33,7 @@ setup(
     entry_points={
         "console_scripts": [
             "seot-agent = seot.agent.__init__:main",
+            "dptool = seot.agent.dptool:main"
         ],
     },
     include_package_data=True,

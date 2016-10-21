@@ -6,7 +6,8 @@ PoC code for the Sharing Economy of Things platform.
 
 - Python 3.5.x or later
 - pip
-- OpenSSL
+- zmq
+- libsodium
 - (Optional) virtualenv
 - (Optional) direnv (2.5.0 or later)
 - (Optional) pythonz
@@ -27,8 +28,6 @@ PoC code for the Sharing Economy of Things platform.
 
 ## Recommended tools during development
 
-- [msgpack-tools](https://github.com/zweifisch/msgpack-tool): For parsing and
-    building seot-dpp messages. Use in conjunction with openssl.
 - [mock-server](https://github.com/tomashanacek/mock-server): For mocking the
     seot-server.
 - [MongoDB Compass](https://www.mongodb.com/products/compass?jmp=docs): For
