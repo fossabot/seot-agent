@@ -9,26 +9,44 @@ logger = logging.getLogger(__name__)
 _REGISTERED_NODES = {}
 
 
+# graph_def = [
+#     {
+#         "name": "const",
+#         "type": "ConstSource",
+#         "args": {
+#             "const": {"foo": 123, "hoge": "hoi"},
+#             "interval": 1
+#         },
+#         "to": ["debug", "zmq"],
+#     },
+#     {
+#         "name": "debug",
+#         "type": "DebugSink",
+#     },
+#     {
+#         "name": "zmq",
+#         "type": "ZMQSink",
+#     }
+# ]
+
 graph_def = [
-    {
-        "name": "const",
-        "type": "ConstSource",
-        "args": {
-            "const": {"foo": 123, "hoge": "hoi"},
-            "interval": 1
-        },
-        "to": ["debug", "zmq"],
-    },
-    {
-        "name": "debug",
-        "type": "DebugSink",
-        "to": []
-    },
-    {
-        "name": "zmq",
-        "type": "ZMQSink",
-        "to": []
-    }
+   {
+       "name": "zmq",
+       "type": "ZMQSource",
+       "to": ["debug", "mongodb"],
+   },
+   {
+       "name": "debug",
+       "type": "DebugSink",
+   },
+   {
+       "name": "mongodb",
+       "type": "MongoDBSink",
+       "args": {
+           "database": "seot",
+           "collection": "test"
+        }
+   }
 ]
 
 
@@ -41,7 +59,11 @@ class DPPServer:
         nodes = {}
         sources = set([])
         for node_def in graph_def:
-            cls = _REGISTERED_NODES[node_def["type"]]
+            cls_name = node_def["type"]
+            if cls_name not in _REGISTERED_NODES:
+                raise RuntimeError("Node {0} is not loaded".format(cls_name))
+
+            cls = _REGISTERED_NODES[cls_name]
             args = node_def.get("args", {})
 
             node = cls(**{"name": node_def["name"], **args})
