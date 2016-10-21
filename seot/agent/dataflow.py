@@ -93,7 +93,7 @@ class Node(ABC):
         return []
 
 
-class Dataflow:
+class Graph:
     """
     A directed acyclic graph composed of dataflow nodes
     """
