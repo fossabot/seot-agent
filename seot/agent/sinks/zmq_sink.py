@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class ZMQSink(BaseSink):
-    def __init__(self, url, **kwargs):
+    def __init__(self, url="tcp://127.0.0.1:51423", **kwargs):
         super().__init__(**kwargs)
         self.url = url
         self.ctx = zmq.asyncio.Context()

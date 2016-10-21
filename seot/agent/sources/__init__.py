@@ -28,7 +28,7 @@ class BaseSource(Node):
 
 
 class ConstSource(BaseSource):
-    def __init__(self, const, interval, **kwargs):
+    def __init__(self, const=None, interval=1, **kwargs):
         super().__init__(**kwargs)
         self.const = const
         self.interval = interval
