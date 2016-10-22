@@ -95,8 +95,10 @@ class DPPServer:
         # First, import the module containing node
         try:
             importlib.import_module(mod_name)
-        except ImportError:
-            logger.warning("Could not load module {0}".format(mod_name))
+        except ImportError as e:
+            logger.warning("Failed to load module {0}: {1}".format(
+                mod_name, e
+            ))
             return
 
         # Now class node should be visible as a subclass of Node
