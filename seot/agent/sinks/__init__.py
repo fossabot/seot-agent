@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSink(Node):
-    def __init__(self, **kwargs):
+    def __init__(self, qsize=0, **kwargs):
         super().__init__(**kwargs)
-        self._queue = asyncio.Queue(loop=self.loop)
+        self._queue = asyncio.Queue(maxsize=qsize, loop=self.loop)
 
     async def write(self, data):
         await self._queue.put(data)
