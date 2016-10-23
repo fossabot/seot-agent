@@ -81,6 +81,8 @@ class DPPServer:
         self.dataflow.start()
 
     def stop(self, loop):
+        if not self.dataflow.running():
+            return
         self.dataflow.stop()
 
     def _load_node_classes(self):

@@ -2,6 +2,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from collections import deque
+from concurrent.futures import FIRST_EXCEPTION
 from contextlib import suppress
 
 logger = logging.getLogger(__name__)
@@ -116,6 +117,11 @@ class Graph:
         if self.loop is None:
             self.loop = asyncio.get_event_loop()
 
+        self._running = False
+
+    def running(self):
+        return self._running
+
     def _topological_sort(self, sources):
         """
         Return a list of dataflow nodes sorted in a topological order.
@@ -144,13 +150,50 @@ class Graph:
         Start this dataflow graph. This method returns immediately and the
         dataflow will be executed in a background task.
         """
+        if self.running():
+            raise RuntimeError("Graph is already running")
+
         nodes = self._topological_sort(self.sources)
 
         async def start():
-            await asyncio.wait([node.startup() for node in nodes],
-                               loop=self.loop)
-            await asyncio.wait([node.start() for node in nodes],
-                               loop=self.loop)
+            # Call .startup() to initializate each node
+            done, pending = await asyncio.wait(
+                [node.startup() for node in nodes],
+                loop=self.loop, return_when=FIRST_EXCEPTION
+            )
+            # Let's check if initialization was successful
+            for future in done:
+                try:
+                    future.result()
+                except Exception as e:
+                    for f in pending:
+                        f.cancel()
+
+                    logger.error("Graph failed to start: {0}".format(e))
+                    raise RuntimeError("Dataflow graph failed to start")
+
+            self._running = True
+
+            # Now we actually launch each node by calling .start()
+            done, pending = await asyncio.wait(
+                [node.start() for node in nodes],
+                loop=self.loop, return_when=FIRST_EXCEPTION
+            )
+
+            # If we reach here, the dataflow graph has stopped
+            self._running = False
+
+            for future in done:
+                try:
+                    future.result()
+                except asyncio.CancelledError:
+                    pass
+                except Exception as e:
+                    for f in pending:
+                        f.cancel()
+
+                    logger.error("Graph crashed: {0}".format(e))
+                    raise RuntimeError("Dataflow graph crashed")
 
         asyncio.ensure_future(start(), loop=self.loop)
 
@@ -159,9 +202,12 @@ class Graph:
         Stop this dataflow graph. This method will block until the entire
         dataflow is stopped.
         """
+        if not self.running():
+            raise RuntimeError("Graph is not running")
+
         nodes = self._topological_sort(self.sources)
 
-        # Request nodes to stop and wait until them top stop
+        # Request nodes to stop and wait until them to stop
         tasks = [node.stop() for node in nodes if node.running()]
         if tasks:
             with suppress(asyncio.CancelledError):
