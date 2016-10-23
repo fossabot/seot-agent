@@ -26,7 +26,7 @@ class IdentityTransformer(BaseTransformer):
 
 
 class LambdaTransformer(BaseTransformer):
-    def __init(self, func, **kwargs):
+    def __init(self, func=None, **kwargs):
         super().__init__(**kwargs)
         self.func = func
 
