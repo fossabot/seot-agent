@@ -1,3 +1,4 @@
 include README.md
 include requirements.txt
 include conf/config.yml.sample
+include conf/log.ini

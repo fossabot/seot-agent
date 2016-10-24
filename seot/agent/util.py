@@ -1,5 +1,6 @@
 import logging
 import logging.config
+from pathlib import Path
 
 from seot import agent
 from . import config
@@ -50,25 +51,5 @@ def log_quit_message():
 
 def configure_logging():
     """ Configure logging and enable colorlog """
-    logging.config.dictConfig({
-        "version": 1,
-        "formatters": {
-            "colored": {
-                "()": "colorlog.ColoredFormatter",
-                "format": "%(log_color)s[%(levelname)s] "
-                          + "%(fg_white)s[%(name)s]: %(message)s"
-            },
-        },
-        "handlers": {
-            "default": {
-                "class": "colorlog.StreamHandler",
-                "level": "INFO",
-                "formatter": "colored"
-            }
-        },
-        "root": {
-            "level": "INFO",
-            "handlers": ["default"],
-        },
-        "disable_existing_loggers": False,
-    })
+    log_ini = (Path(__file__) / "../../../conf/log.ini").resolve()
+    logging.config.fileConfig(str(log_ini), disable_existing_loggers=False)
