@@ -1,0 +1,21 @@
+{
+    "nodes": [
+        {
+            "name": "zmq",
+            "type": "ZMQSource",
+            "to": ["debug", "mongodb"]
+        },
+        {
+            "name": "debug",
+            "type": "DebugSink"
+        },
+        {
+            "name": "mongodb",
+            "type": "MongoDBSink",
+            "args": {
+                "database": "seot",
+                "collection": "test"
+            }
+        }
+    ]
+}

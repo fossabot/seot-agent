@@ -1,0 +1,21 @@
+{
+    "nodes": [
+        {
+            "name": "const",
+            "type": "ConstSource",
+            "args": {
+                "const": {"foo": 123, "hoge": "hoi"},
+                "interval": 1
+            },
+            "to": ["debug", "zmq"]
+        },
+        {
+            "name": "debug",
+            "type": "DebugSink"
+        },
+        {
+            "name": "zmq",
+            "type": "ZMQSink"
+        }
+    ]
+}

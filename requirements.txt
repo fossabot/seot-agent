@@ -24,6 +24,7 @@ pymongo==2.9.4
 PyYAML==3.12
 pyzmq==16.0.0
 requests==2.11.1
+schema==0.6.5
 six==1.10.0
 uvloop==0.5.4
 websocket-client==0.37.0

@@ -1,5 +1,7 @@
 import importlib
+import json
 import logging
+from schema import Optional, Schema
 
 from . import config
 from .dataflow import Graph, Node
@@ -9,69 +11,42 @@ logger = logging.getLogger(__name__)
 _REGISTERED_NODES = {}
 
 
-# graph_def = [
-#     {
-#         "name": "const",
-#         "type": "ConstSource",
-#         "args": {
-#             "const": {"foo": 123, "hoge": "hoi"},
-#             "interval": 1
-#         },
-#         "to": ["debug", "zmq"],
-#     },
-#     {
-#         "name": "debug",
-#         "type": "DebugSink",
-#     },
-#     {
-#         "name": "zmq",
-#         "type": "ZMQSink",
-#     }
-# ]
-
-graph_def = [
-   {
-       "name": "zmq",
-       "type": "ZMQSource",
-       "to": ["debug", "mongodb"],
-   },
-   {
-       "name": "debug",
-       "type": "DebugSink",
-   },
-   {
-       "name": "mongodb",
-       "type": "MongoDBSink",
-       "args": {
-           "database": "seot",
-           "collection": "test"
-        }
-   }
-]
-
-
 class DPPServer:
     def __init__(self):
         self._load_node_classes()
 
-        global graph_def, _REGISTERED_NODES
+        global _REGISTERED_NODES
+
+        with open("tests/graph/const-debug-zmq.json") as f:
+            data = json.load(f)
+
+        schema = Schema({
+            "nodes": [{
+                "name": str,
+                "type": str,
+                Optional("args"): {str: object},
+                Optional("to"): [str]
+            }]
+        })
+
+        graph_def = schema.validate(data)
 
         nodes = {}
         sources = set([])
-        for node_def in graph_def:
+        for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
             if cls_name not in _REGISTERED_NODES:
                 raise RuntimeError("Node {0} is not loaded".format(cls_name))
 
             cls = _REGISTERED_NODES[cls_name]
-            args = node_def.get("args", {})
+            args = node_def.get["args"]
 
             node = cls(**{"name": node_def["name"], **args})
             nodes[node_def["name"]] = node
             sources.add(node)
 
-        for node_def in graph_def:
-            for next_node in node_def.get("to", []):
+        for node_def in graph_def["nodes"]:
+            for next_node in node_def["to"]:
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 
@@ -111,5 +86,7 @@ class DPPServer:
                 loaded = True
                 break
 
-        if not loaded:
-            logger.warning("Could not load class {0}".format(cls_name))
+        if loaded:
+            logger.info("Loaded node {0} from {1}".format(cls_name, mod_name))
+        else:
+            logger.warning("Could not find class {0}".format(cls_name))
