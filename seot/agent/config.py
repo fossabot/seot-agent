@@ -1,6 +1,7 @@
 import getpass
 import logging
 import platform
+import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -10,8 +11,7 @@ from seot import agent
 import yaml
 
 CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
-SEOT_DIR_PATH = Path.home() / ".local/share/seot"
-STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
+STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
 
 logger = logging.getLogger(__name__)
 _config = {}
@@ -73,8 +73,8 @@ def save_state():
 
 
 def _init_state():
-    if not SEOT_DIR_PATH.exists():
-        SEOT_DIR_PATH.mkdir(parents=True)
+    if not STATE_FILE_PATH.parent.exists():
+        STATE_FILE_PATH.parent.mkdir(parents=True)
 
     logger.info("Generating agent UUID")
     _state["agent_id"] = str(uuid.uuid4())
@@ -89,6 +89,25 @@ def _init_state():
 def get_state(key=None):
     """ Get a state value """
     return _get(_state, key)
+
+
+def _init_config():
+    if not CONFIG_FILE_PATH.parent.exists():
+        CONFIG_FILE_PATH.parent.mkdir(parents=True)
+
+    src = (Path(__file__) / "../../../conf/config.yml.sample").resolve()
+    dst = CONFIG_FILE_PATH.parent / "config.yml.sample"
+
+    try:
+        shutil.copyfile(str(src), str(dst))
+    except OSError:
+        logger.error("Failed to copy configuration file template; please"
+                     " manually copy")
+        sys.exit(1)
+
+    logger.info("Please rename {0} to {1} and adjust configuration values"
+                .format(str(dst), str(CONFIG_FILE_PATH)))
+    sys.exit(1)
 
 
 def load():
@@ -109,6 +128,8 @@ def load():
         except Exception as e:
             logger.error("Failed to load configurations: {0}".format(e))
             sys.exit(1)
+    else:
+        _init_config()
 
     if STATE_FILE_PATH.exists():
         try:
