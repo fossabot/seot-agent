@@ -14,13 +14,16 @@ logger = logging.getLogger(__name__)
 class CPPServer:
     BASE_URL = None
 
-    def __init__(self):
+    def __init__(self, loop=None):
         self.__class__.BASE_URL = config.get("cpp.base_url")
+        self.loop = loop
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
 
     async def _request(self, method, endpoint, data=None):
         url = self.__class__.BASE_URL + endpoint
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.loop) as session:
             try:
                 async with session.request(method=method, url=url, data=data,
                                            timeout=10) as resp:
@@ -61,9 +64,9 @@ class CPPServer:
             await self.heartbeat()
             await asyncio.sleep(sleep_length)
 
-    def start(self, loop):
-        self.task = asyncio.ensure_future(self._main(), loop=loop)
+    def start(self):
+        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
 
-    def stop(self, loop):
+    def stop(self):
         if not self.task.cancelled() and not self.task.done():
             self.task.set_result(None)

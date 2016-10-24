@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 import zmq.asyncio
@@ -16,13 +15,15 @@ logger = logging.getLogger(__name__)
 
 class Agent():
     def __init__(self):
-        self.loop = zmq.asyncio.ZMQEventLoop()
-        asyncio.set_event_loop(self.loop)
-        self.cpp_server = cpp.CPPServer()
-        self.graph = GraphBuilder.from_json("tests/graph/const-debug-zmq.json")
+        self.loop = zmq.asyncio.install()
+
+        self.cpp_server = cpp.CPPServer(self.loop)
+
+        json_path = "tests/graph/const-debug-zmq.json"
+        self.graph = GraphBuilder.from_json(json_path, loop=self.loop)
 
     def run(self):
-        self.cpp_server.start(self.loop)
+        self.cpp_server.start()
         self.graph.start()
 
         # Run main event loop
@@ -34,8 +35,10 @@ class Agent():
         finally:
             logger.info("Shutting down...")
 
-            self.cpp_server.stop(self.loop)
-            self.graph.stop()
+            self.cpp_server.stop()
+
+            if self.graph.running():
+                self.graph.stop()
 
         self.loop.close()
         log_quit_message()

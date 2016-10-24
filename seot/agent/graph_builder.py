@@ -23,36 +23,37 @@ class GraphBuilder:
     })
 
     @classmethod
-    def from_json(cls, filename):
+    def from_json(cls, filename, **kwargs):
         with open(filename) as f:
-            return cls.from_obj(json.load(f))
+            return cls.from_obj(json.load(f), **kwargs)
 
     @classmethod
-    def from_yaml(cls, filename):
+    def from_yaml(cls, filename, **kwargs):
         with open(filename) as f:
-            return cls.from_obj(yaml.load(f))
+            return cls.from_obj(yaml.load(f), **kwargs)
 
     @classmethod
-    def from_obj(cls, obj):
+    def from_obj(cls, obj, **kwargs):
         if cls._REGISTERED_NODES is None:
             cls._load_node_classes()
 
         graph_def = cls._GRAPH_DEF_SCHEMA.validate(obj)
 
         nodes = {}
-        sources = set([])
         for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
             if cls_name not in cls._REGISTERED_NODES:
                 raise RuntimeError("Node {0} is not loaded".format(cls_name))
 
             node_cls = cls._REGISTERED_NODES[cls_name]
-            args = node_def.get("args", {})
+            node_args = node_def.get("args", {})
+            node_args["name"] = node_def["name"]
+            if "loop" in kwargs:
+                node_args["loop"] = kwargs["loop"]
 
-            node = node_cls(**{"name": node_def["name"], **args})
-            nodes[node_def["name"]] = node
-            sources.add(node)
+            nodes[node_def["name"]] = node_cls(**node_args)
 
+        sources = set(nodes.values())
         for node_def in graph_def["nodes"]:
             if "to" not in node_def:
                 continue
@@ -61,7 +62,7 @@ class GraphBuilder:
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 
-        return Graph(*sources)
+        return Graph(*sources, **kwargs)
 
     @classmethod
     def _load_node_classes(cls):

@@ -17,7 +17,7 @@ class ZMQSink(BaseSink):
         self.ctx = zmq.asyncio.Context()
 
     async def startup(self):
-        self.sock = self.ctx.socket(zmq.PUSH)
+        self.sock = self.ctx.socket(zmq.PUSH, io_loop=self.loop)
         self.sock.setsockopt(zmq.LINGER, self.linger)
         logger.info("Connecting to ZMQ peer at {0}".format(self.url))
         self.sock.connect(self.url)

@@ -36,7 +36,7 @@ class ConstSource(BaseSource):
     async def _run(self):
         while True:
             await self._emit(self.const)
-            await asyncio.sleep(self.interval)
+            await asyncio.sleep(self.interval, loop=self.loop)
 
 
 class NullSource(BaseSource):
