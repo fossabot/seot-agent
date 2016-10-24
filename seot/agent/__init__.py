@@ -4,7 +4,7 @@ import logging
 import zmq.asyncio
 
 from . import config, cpp
-from .dataflow_builder import GraphBuilder
+from .graph_builder import GraphBuilder
 from .util import configure_logging, log_startup_message
 from .util import log_quit_message
 
