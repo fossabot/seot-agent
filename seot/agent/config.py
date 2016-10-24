@@ -5,6 +5,7 @@ import sys
 import uuid
 from pathlib import Path
 
+from schema import Optional, Schema, SchemaError
 from seot import agent
 import yaml
 
@@ -12,35 +13,37 @@ CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
 SEOT_DIR_PATH = Path.home() / ".local/share/seot"
 STATE_FILE_PATH = SEOT_DIR_PATH / "state.yml"
 
-REQUIRED_KEYS = [
-    "agent.user_id",
-    "agent.type",
-    "agent.coordinate.longitude",
-    "agent.coordinate.latitude"
-]
-
 logger = logging.getLogger(__name__)
-_config = {
-    "agent": {
-    },
-    "cpp": {
-        "heartbeat_interval": 60,
-        "base_url": "http://localhost:8888/api"
-    },
-    "dpp": {
-        "listen_address": "0.0.0.0",
-        "listen_port": "51423"
-    },
-    "sources": {},
-    "transformers": [
-        {
-            "type": "docker",
-            "url": "tcp://localhost:2375"
-        }
-    ],
-    "sinks": {}
-}
+_config = {}
 _state = {}
+
+_CONFIG_SCHEMA = Schema({
+    "agent": {
+        "user_id": str,
+        "type": str,
+        "coordinate": {
+            "longitude": float,
+            "latitude": float
+        }
+    },
+    Optional("cpp"): {
+        Optional("heartbeat_interval", default=60): int,
+        Optional("base_url", default="http://localhost:8888/api"): str
+    },
+    Optional("dpp"): {
+        Optional("listen_address", default="0.0.0.0"): str,
+        Optional("listen_port", default=51423): int
+    },
+    Optional("nodes"): [{
+        "module": str,
+        "class": str
+    }]
+})
+
+_STATE_SCHEMA = Schema({
+    "version": str,
+    "agent_id": str
+})
 
 
 def _get(config, key=None):
@@ -88,29 +91,6 @@ def get_state(key=None):
     return _get(_state, key)
 
 
-def _merge_dict(dst, src):
-    for k, v in src.items():
-        if isinstance(v, dict):
-            dst.setdefault(k, {})
-            _merge_dict(dst[k], v)
-        else:
-            dst[k] = v
-
-    return dst
-
-
-def _validate_config():
-    failed = False
-
-    for key in REQUIRED_KEYS:
-        if get(key) is None:
-            logger.error("{0} is a required config key".format(key))
-            failed = True
-
-    if failed:
-        sys.exit(1)
-
-
 def load():
     """ Load configurations from files """
     global _config, _state
@@ -121,25 +101,29 @@ def load():
                 CONFIG_FILE_PATH
             ))
             with open(str(CONFIG_FILE_PATH)) as f:
-                _merge_dict(_config, yaml.load(f))
+                _config = _CONFIG_SCHEMA.validate(yaml.load(f))
             logger.info("Configurations successfully loaded")
-        except:
-            logger.error("Failed to load configurations")
+        except SchemaError as e:
+            logger.error("Configuration format is wrong: {0}".format(e.code))
+            sys.exit(1)
+        except Exception as e:
+            logger.error("Failed to load configurations: {0}".format(e))
             sys.exit(1)
 
     if STATE_FILE_PATH.exists():
         try:
             logger.info("Loading states from {0}".format(STATE_FILE_PATH))
             with open(str(STATE_FILE_PATH)) as f:
-                _merge_dict(_state, yaml.load(f))
+                _state = _STATE_SCHEMA.validate(yaml.load(f))
             logger.info("States successfully loaded")
-        except:
-            logger.error("Failed to load state")
+        except SchemaError as e:
+            logger.error("State format is wrong {0}".format(e.code))
+            sys.exit(1)
+        except Exception as e:
+            logger.error("Failed to load state: {0}".format(e))
             sys.exit(1)
     else:
         _init_state()
-
-    _validate_config()
 
 
 def discover_fact():
