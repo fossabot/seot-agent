@@ -1,0 +1,13 @@
+{
+    "nodes": [
+        {
+            "name": "zmq",
+            "type": "ZMQSource",
+            "to": ["debug"]
+        },
+        {
+            "name": "debug",
+            "type": "DebugSink"
+        }
+    ]
+}
