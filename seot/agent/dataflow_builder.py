@@ -2,45 +2,54 @@ import importlib
 import json
 import logging
 from schema import Optional, Schema
+import yaml
 
 from . import config
 from .dataflow import Graph, Node
 
 logger = logging.getLogger(__name__)
 
-_REGISTERED_NODES = {}
 
+class GraphBuilder:
+    _REGISTERED_NODES = None
 
-_GRAPH_DEF_SCHEMA = Schema({
-    "nodes": [{
-        "name": str,
-        "type": str,
-        Optional("args"): {str: object},
-        Optional("to"): [str]
-    }]
-})
+    _GRAPH_DEF_SCHEMA = Schema({
+        "nodes": [{
+            "name": str,
+            "type": str,
+            Optional("args"): {str: object},
+            Optional("to"): [str]
+        }]
+    })
 
+    @classmethod
+    def from_json(cls, filename):
+        with open(filename) as f:
+            return cls.from_obj(json.load(f))
 
-class DPPServer:
-    def __init__(self):
-        self._load_node_classes()
+    @classmethod
+    def from_yaml(cls, filename):
+        with open(filename) as f:
+            return cls.from_obj(yaml.load(f))
 
-        with open("tests/graph/const-debug-zmq.json") as f:
-            data = json.load(f)
+    @classmethod
+    def from_obj(cls, obj):
+        if cls._REGISTERED_NODES is None:
+            cls._load_node_classes()
 
-        graph_def = _GRAPH_DEF_SCHEMA.validate(data)
+        graph_def = cls._GRAPH_DEF_SCHEMA.validate(obj)
 
         nodes = {}
         sources = set([])
         for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
-            if cls_name not in _REGISTERED_NODES:
+            if cls_name not in cls._REGISTERED_NODES:
                 raise RuntimeError("Node {0} is not loaded".format(cls_name))
 
-            cls = _REGISTERED_NODES[cls_name]
+            node_cls = cls._REGISTERED_NODES[cls_name]
             args = node_def.get("args", {})
 
-            node = cls(**{"name": node_def["name"], **args})
+            node = node_cls(**{"name": node_def["name"], **args})
             nodes[node_def["name"]] = node
             sources.add(node)
 
@@ -52,23 +61,22 @@ class DPPServer:
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 
-        self.dataflow = Graph(*sources)
+        return Graph(*sources)
 
-    def start(self, loop):
-        self.dataflow.start()
-
-    def stop(self, loop):
-        if not self.dataflow.running():
-            return
-        self.dataflow.stop()
-
-    def _load_node_classes(self):
-        global _REGISTERED_NODES
+    @classmethod
+    def _load_node_classes(cls):
+        cls._REGISTERED_NODES = {}
 
         for node in config.get("nodes"):
-            self._try_load_node(node["module"], node["class"])
+            node_cls = cls._try_load_node(node["module"], node["class"])
 
-    def _try_load_node(self, mod_name, cls_name):
+            if node_cls is None:
+                continue
+
+            cls._REGISTERED_NODES[node["class"]] = node_cls
+
+    @classmethod
+    def _try_load_node(cls, mod_name, cls_name):
         # First, import the module containing node
         try:
             importlib.import_module(mod_name)
@@ -76,17 +84,15 @@ class DPPServer:
             logger.warning("Failed to load module {0}: {1}".format(
                 mod_name, e
             ))
-            return
+            return None
 
         # Now class node should be visible as a subclass of Node
-        loaded = False
-        for cls in Node.all_subclasses():
-            if cls.__name__ == cls_name:
-                _REGISTERED_NODES[cls_name] = cls
-                loaded = True
-                break
+        for node_cls in Node.all_subclasses():
+            if node_cls.__name__ == cls_name:
+                logger.info("Loaded node {0} from {1}".format(
+                    cls_name, mod_name
+                ))
+                return node_cls
 
-        if loaded:
-            logger.info("Loaded node {0} from {1}".format(cls_name, mod_name))
-        else:
-            logger.warning("Could not find class {0}".format(cls_name))
+        logger.warning("Could not find class {0}".format(cls_name))
+        return None
