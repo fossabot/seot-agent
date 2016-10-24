@@ -26,13 +26,9 @@ _CONFIG_SCHEMA = Schema({
             "latitude": float
         }
     },
-    Optional("cpp"): {
+    "cpp": {
         Optional("heartbeat_interval", default=60): int,
         Optional("base_url", default="http://localhost:8888/api"): str
-    },
-    Optional("dpp"): {
-        Optional("listen_address", default="0.0.0.0"): str,
-        Optional("listen_port", default=51423): int
     },
     Optional("nodes"): [{
         "module": str,
