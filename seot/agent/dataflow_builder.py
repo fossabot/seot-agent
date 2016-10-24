@@ -11,25 +11,24 @@ logger = logging.getLogger(__name__)
 _REGISTERED_NODES = {}
 
 
+_GRAPH_DEF_SCHEMA = Schema({
+    "nodes": [{
+        "name": str,
+        "type": str,
+        Optional("args"): {str: object},
+        Optional("to"): [str]
+    }]
+})
+
+
 class DPPServer:
     def __init__(self):
         self._load_node_classes()
 
-        global _REGISTERED_NODES
-
         with open("tests/graph/const-debug-zmq.json") as f:
             data = json.load(f)
 
-        schema = Schema({
-            "nodes": [{
-                "name": str,
-                "type": str,
-                Optional("args"): {str: object},
-                Optional("to"): [str]
-            }]
-        })
-
-        graph_def = schema.validate(data)
+        graph_def = _GRAPH_DEF_SCHEMA.validate(data)
 
         nodes = {}
         sources = set([])
@@ -39,13 +38,16 @@ class DPPServer:
                 raise RuntimeError("Node {0} is not loaded".format(cls_name))
 
             cls = _REGISTERED_NODES[cls_name]
-            args = node_def.get["args"]
+            args = node_def.get("args", {})
 
             node = cls(**{"name": node_def["name"], **args})
             nodes[node_def["name"]] = node
             sources.add(node)
 
         for node_def in graph_def["nodes"]:
+            if "to" not in node_def:
+                continue
+
             for next_node in node_def["to"]:
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
@@ -64,8 +66,6 @@ class DPPServer:
         global _REGISTERED_NODES
 
         for node in config.get("nodes"):
-            if "module" not in node or "class" not in node:
-                continue
             self._try_load_node(node["module"], node["class"])
 
     def _try_load_node(self, mod_name, cls_name):
