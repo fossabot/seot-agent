@@ -59,6 +59,11 @@ class GraphBuilder:
                 continue
 
             for next_node in node_def["to"]:
+                if next_node not in nodes:
+                    logger.warning("Ignoring unknown destionation node {0}"
+                                   .format(next_node))
+                    continue
+
                 nodes[node_def["name"]].connect(nodes[next_node])
                 sources.remove(nodes[next_node])
 
