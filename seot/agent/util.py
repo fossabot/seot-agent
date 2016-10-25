@@ -2,8 +2,7 @@ import logging
 import logging.config
 from pathlib import Path
 
-from seot import agent
-from . import config
+from . import config, meta
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ def log_startup_message():
     \___ \|  _| / _ \| |
      ___) | |__| (_) | |
     |____/|_____\___/|_|    Agent v{0}
-    """.format(agent.__version__)
+    """.format(meta.__version__)
     logger.info(banner)
     logger.info("Agent ID: {0}".format(config.get_state("agent_id")))
     logger.info("Agent owner: {0}".format(

@@ -2,13 +2,13 @@ import logging
 
 import zmq.asyncio
 
-from . import config, cpp
+from . import config, cpp, meta
 from .graph_builder import GraphBuilder
 from .util import configure_logging, log_startup_message
 from .util import log_quit_message
 
 
-__version__ = "0.0.1"
+__version__ = meta.__version__
 
 logger = logging.getLogger(__name__)
 

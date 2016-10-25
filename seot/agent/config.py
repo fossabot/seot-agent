@@ -7,8 +7,9 @@ import uuid
 from pathlib import Path
 
 from schema import Optional, Schema, SchemaError
-from seot import agent
 import yaml
+
+from . import meta
 
 CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
 STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
@@ -20,7 +21,6 @@ _state = {}
 _CONFIG_SCHEMA = Schema({
     "agent": {
         "user_id": str,
-        "type": str,
         "coordinate": {
             "longitude": float,
             "latitude": float
@@ -77,7 +77,7 @@ def _init_state():
     logger.info("Successfully generated agent UUID: {0}".format(
         _state.get("agent_id")
     ))
-    _state["version"] = agent.__version__
+    _state["version"] = meta.__version__
 
     save_state()
 
@@ -153,7 +153,7 @@ def discover_fact():
         os_dist = " ".join(platform.linux_distribution())
 
     _config["fact"] = {
-        "agent_version": agent.__version__,
+        "agent_version": meta.__version__,
         "arch": platform.machine(),
         "processor": platform.processor(),
         "python": " ".join([
