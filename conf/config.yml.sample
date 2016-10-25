@@ -1,7 +1,6 @@
 ---
 agent:
   user_id: keichi
-  type: source
   coordinate:
     longitude: 34.8222789
     latitude: 135.5258597

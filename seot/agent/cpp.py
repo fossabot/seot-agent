@@ -1,12 +1,12 @@
 import asyncio
+import json
 import logging
-import time
 
 from aiodns.error import DNSError
 import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 
-from . import config
+from . import config, meta
 
 logger = logging.getLogger(__name__)
 
@@ -20,18 +20,26 @@ class CPPServer:
         if loop is None:
             self.loop = asyncio.get_event_loop()
 
-    async def _request(self, method, endpoint, data=None):
+    async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
+        headers = {
+            "User-Agent": "seot-agent {0}".format(meta.__version__)
+        }
+
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+            data = json.dumps(data)
 
         async with aiohttp.ClientSession(loop=self.loop) as session:
             try:
                 async with session.request(method=method, url=url, data=data,
-                                           timeout=10) as resp:
+                                           timeout=10,
+                                           headers=headers) as resp:
                     status = resp.status
-                    body = await resp.text()
+                    body = await resp.json()
 
                     logger.info("Response status code: {0}".format(status))
-                    logger.info("Response body:\n{0}".format(body.strip()))
+                    logger.info("Response body:\n{0}".format(body))
             except DNSError:
                 logger.error("Could not resolve name")
             except ClientOSError as e:
@@ -50,12 +58,11 @@ class CPPServer:
         await self._request("POST", "/heartbeat", data={
             "user_id": config.get("agent.user_id"),
             "agent_id": config.get_state("agent_id"),
-            "agent_type": config.get("agent.type"),
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
-            "dpp_listen_port": config.get("dpp.listen_port"),
-            "timestamp": int(time.time())
-        })
+            "nodes": ["foo", "hoge", "piyo"],
+            "busy": False
+        }, content_type="application/json")
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
