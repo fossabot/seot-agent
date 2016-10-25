@@ -17,7 +17,7 @@ class GraphBuilder:
         "nodes": [{
             "name": str,
             "type": str,
-            Optional("args"): {str: object},
+            Optional("args"): {Optional(str): object},
             Optional("to"): [str]
         }]
     })

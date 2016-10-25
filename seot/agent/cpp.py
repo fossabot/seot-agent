@@ -7,6 +7,7 @@ import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 
 from . import config, meta
+from .graph_builder import GraphBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +36,7 @@ class CPPServer:
                 async with session.request(method=method, url=url, data=data,
                                            timeout=10,
                                            headers=headers) as resp:
-                    status = resp.status
-                    body = await resp.json()
-
-                    logger.info("Response status code: {0}".format(status))
-                    logger.info("Response body:\n{0}".format(body))
+                    return await resp.json()
             except DNSError:
                 logger.error("Could not resolve name")
             except ClientOSError as e:
@@ -52,23 +49,44 @@ class CPPServer:
                 logger.error("Unexpected error: {0}".format(e))
                 raise
 
-    async def heartbeat(self):
+    async def _get_job(self, job_id):
+        logger.info("Getting job detail {0}".format(job_id))
+        return await self._request("GET", "/job/" + job_id)
+
+    async def _accept_job(self, job_id):
+        logger.info("Accepting job {0}".format(job_id))
+        return await self._request("POST", "/job/{0}/accept".format(job_id))
+
+    async def _heartbeat(self):
         logger.info("Sending heartbeat to SEoT server...")
 
-        await self._request("POST", "/heartbeat", data={
+        resp = await self._request("POST", "/heartbeat", data={
             "user_id": config.get("agent.user_id"),
             "agent_id": config.get_state("agent_id"),
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "nodes": ["foo", "hoge", "piyo"],
             "busy": False
-        }, content_type="application/json")
+        })
+
+        if resp is not None:
+            if resp.get("job_offer", False):
+                job_id = resp["job_id"]
+                logger.info("Got job offer for job {0}".format(job_id))
+                job = await self._get_job(job_id)
+
+                await self._accept_job(job_id)
+                del job["application_id"]
+                del job["job_id"]
+
+                GraphBuilder.from_obj(job)
+                logger.info("Built graph from job definition")
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
 
         while True:
-            await self.heartbeat()
+            await self._heartbeat()
             await asyncio.sleep(sleep_length)
 
     def start(self):
