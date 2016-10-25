@@ -19,10 +19,7 @@ def log_startup_message():
     """.format(meta.__version__)
     logger.info(banner)
     logger.info("Agent ID: {0}".format(config.get_state("agent_id")))
-    logger.info("Agent owner: {0}".format(
-        config.get("agent.user_id")
-    ))
-    logger.info("Agent type: {0}".format(config.get("agent.type")))
+    logger.info("Agent owner: {0}".format( config.get("agent.user_id")))
     logger.info("Agent coordinate: ({0}, {1})".format(
         config.get("agent.coordinate.longitude"),
         config.get("agent.coordinate.latitude")
