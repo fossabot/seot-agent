@@ -1,4 +1,5 @@
 # seot-agent
+[![build status](https://titan.ais.cmc.osaka-u.ac.jp/tis/seot-agent/badges/master/build.svg)](https://titan.ais.cmc.osaka-u.ac.jp/tis/seot-agent/commits/master)
 
 PoC code for the Sharing Economy of Things platform.
 
