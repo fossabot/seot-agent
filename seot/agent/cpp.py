@@ -47,7 +47,6 @@ class CPPServer:
                 logger.error("Request timed out")
             except Exception as e:
                 logger.error("Unexpected error: {0}".format(e))
-                raise
 
     async def _get_job(self, job_id):
         logger.info("Getting job detail {0}".format(job_id))
