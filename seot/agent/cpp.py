@@ -65,7 +65,7 @@ class CPPServer:
             "agent_id": config.get_state("agent_id"),
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
-            "nodes": ["foo", "hoge", "piyo"],
+            "nodes": [node["class"] for node in config.get("nodes")],
             "busy": False
         })
 
