@@ -65,7 +65,7 @@ class GraphBuilder:
                     continue
 
                 nodes[node_def["name"]].connect(nodes[next_node])
-                sources.remove(nodes[next_node])
+                sources.discard(nodes[next_node])
 
         return Graph(*sources, **kwargs)
 
