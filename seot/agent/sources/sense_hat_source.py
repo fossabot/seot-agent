@@ -7,7 +7,7 @@ from . import BaseSource
 logger = logging.getLogger(__name__)
 
 
-class StubSenseHatSource(BaseSource):
+class SenseHatSource(BaseSource):
     def __init__(self, interval=5, **kwargs):
         super().__init__(**kwargs)
         self.interval = interval
