@@ -18,5 +18,7 @@ nodes:
     class: DebugSink
   - module: seot.agent.sources
     class: ConstSource
+  - module: seot.agent.sources.sense_hat_source
+    class: SenseHatSource
   - module: seot.agent.sources.stub_sense_hat_source
     class: StubSenseHatSource
