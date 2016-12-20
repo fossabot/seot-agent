@@ -138,6 +138,7 @@ class Graph:
                 for next_node in node.next_nodes():
                     walk(next_node)
                 result.appendleft(node)
+                pending.discard(node)
                 permanent.add(node)
 
         for node in sources:
