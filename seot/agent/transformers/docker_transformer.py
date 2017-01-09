@@ -1,5 +1,8 @@
 import asyncio
+import shutil
+import tempfile
 from logging import getLogger
+from pathlib import Path
 
 import docker
 
@@ -15,9 +18,13 @@ class DockerTransformer(BaseTransformer):
         self.tag = tag
         self.cmd = cmd
         self.client = docker.from_env()
+        self.send_queue = asyncio.Queue()
+        self.recv_queue = asyncio.Queue()
 
     async def startup(self):
         self._health_check()
+
+        await self._start_unix_server()
 
         logger.info("Pulling docker image {0}:{1}".format(self.repo, self.tag))
         await self.loop.run_in_executor(None, self._pull_image)
@@ -42,8 +49,11 @@ class DockerTransformer(BaseTransformer):
             self.repo, self.tag))
         await self.loop.run_in_executor(None, self._remove_image)
 
+        shutil.rmtree(str(self.tmp_dir_path))
+
     async def _process(self, data):
-        return data
+        await self.send_queue.put(data)
+        return await self.recv_queue.get()
 
     def _health_check(self):
         if not self.client.ping():
@@ -60,9 +70,14 @@ class DockerTransformer(BaseTransformer):
         self.client.images.remove(self.repo)
 
     def _start_container(self):
-        self.container = self.client.containers.run(self.repo,
-                                                    command=self.cmd,
-                                                    detach=True)
+        self.container = self.client.containers.run(
+            self.repo,
+            command=self.cmd,
+            volumes={
+                str(self.sock_path): {"bind": "/tmp/seot.sock", "mode": "rw"}
+            },
+            detach=True
+        )
 
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
@@ -71,3 +86,18 @@ class DockerTransformer(BaseTransformer):
 
     def _stop_container(self):
         self.container.stop()
+
+    async def _start_unix_server(self):
+        self.tmp_dir_path = Path(tempfile.mkdtemp(prefix="seot-", dir="/tmp"))
+        self.sock_path = self.tmp_dir_path / "seot.sock"
+
+        await asyncio.start_unix_server(self._handle_client,
+                                        path=str(self.sock_path),
+                                        loop=self.loop)
+
+    async def _handle_client(self, reader, writer):
+        logger.info("Client has connected")
+
+        while True:
+            data = await self.send_queue.get()
+            await self.recv_queue.put(data)

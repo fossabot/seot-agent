@@ -14,7 +14,7 @@
             "type": "DockerTransformer",
             "args": {
                 "repo": "alpine",
-                "cmd": "ps"
+                "cmd": ["ls", "-la", "/tmp"]
             },
             "to": ["debug"]
         },
