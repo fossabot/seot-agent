@@ -5,7 +5,7 @@ from ..sources import BaseSource
 
 
 class BaseTransformer(BaseSource, BaseSink):
-    def __init(self, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     @abstractmethod
@@ -26,7 +26,7 @@ class IdentityTransformer(BaseTransformer):
 
 
 class LambdaTransformer(BaseTransformer):
-    def __init(self, func=None, **kwargs):
+    def __init__(self, func=None, **kwargs):
         super().__init__(**kwargs)
         self.func = func
 
