@@ -19,7 +19,7 @@ class Agent():
 
         self.cpp_server = cpp.CPPServer(self.loop)
 
-        json_path = "tests/graph/const-debug-zmq.json"
+        json_path = "tests/graph/const-docker-debug.json"
         self.graph = GraphBuilder.from_json(json_path, loop=self.loop)
 
     def run(self):

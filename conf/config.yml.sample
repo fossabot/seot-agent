@@ -22,3 +22,5 @@ nodes:
     class: SenseHatSource
   - module: seot.agent.sources.stub_sense_hat_source
     class: StubSenseHatSource
+  - module: seot.agent.transformers.docker_transformer
+    class: DockerTransformer
