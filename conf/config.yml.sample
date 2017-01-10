@@ -8,19 +8,19 @@ agent:
 cpp: {}
 
 nodes:
-  - module: seot.agent.sinks.zmq_sink
+  - module: seot.agent.sinks.zmq
     class: ZMQSink
-  - module: seot.agent.sinks.mongodb_sink
+  - module: seot.agent.sinks.mongodb
     class: MongoDBSink
-  - module: seot.agent.sources.zmq_source
+  - module: seot.agent.sources.zmq
     class: ZMQSource
   - module: seot.agent.sinks
     class: DebugSink
   - module: seot.agent.sources
     class: ConstSource
-  - module: seot.agent.sources.sense_hat_source
+  - module: seot.agent.sources.sense_hat
     class: SenseHatSource
-  - module: seot.agent.sources.stub_sense_hat_source
+  - module: seot.agent.sources.stub_sense_hat
     class: StubSenseHatSource
-  - module: seot.agent.transformers.docker_transformer
+  - module: seot.agent.transformers.docker
     class: DockerTransformer
