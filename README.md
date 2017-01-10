@@ -13,6 +13,16 @@ PoC code for the Sharing Economy of Things platform.
 - (Optional) direnv (2.5.0 or later)
 - (Optional) pythonz
 
+
+### Nodes
+
+- `DockerTransformer`
+    - Requires running user to be in the `docker` group
+- `SenseHatSource`
+    - Requires RaspberryPi and Sense Hat hardware
+    - Requires running user to be in the following groups: `video`, `input`,
+        `gpio`, `i2c` and `spi`
+
 ## How to run
 
 1. Copy `config.yml.sample` to `~/.config/seot/config.yml` and adjust config
@@ -29,7 +39,5 @@ PoC code for the Sharing Economy of Things platform.
 
 ## Recommended tools during development
 
-- [mock-server](https://github.com/tomashanacek/mock-server): For mocking the
-    seot-server.
 - [MongoDB Compass](https://www.mongodb.com/products/compass?jmp=docs): For
   exploring data stored in MongoDB.
