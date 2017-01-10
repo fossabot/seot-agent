@@ -1,6 +1,8 @@
 from codecs import open
 from os import path
+
 import seot.agent
+
 from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))

@@ -3,6 +3,7 @@ import logging
 
 
 import motor.motor_asyncio
+
 from pymongo.errors import ConnectionFailure
 
 from . import BaseSink

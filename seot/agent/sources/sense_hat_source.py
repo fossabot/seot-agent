@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from sense_hat import SenseHat
+
 from . import BaseSource
 
 logger = logging.getLogger(__name__)

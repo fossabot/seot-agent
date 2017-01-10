@@ -3,6 +3,7 @@ import json
 import logging
 
 from aiodns.error import DNSError
+
 import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 

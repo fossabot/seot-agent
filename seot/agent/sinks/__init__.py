@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 from abc import abstractmethod
+
 from pygments import formatters, highlight, lexers
 
 from ..dataflow import Node

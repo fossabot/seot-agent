@@ -3,6 +3,7 @@ import json
 import sys
 
 from pygments import formatters, highlight, lexers
+
 import zmq
 
 from .dpp import decode, encode
@@ -50,6 +51,7 @@ def main():
         write(args)
     else:
         read(args)
+
 
 if __name__ == "__main__":
     main()

@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 
 from schema import Optional, Schema, SchemaError
+
 import yaml
 
 from . import meta
