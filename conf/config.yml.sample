@@ -22,5 +22,7 @@ nodes:
     class: SenseHatSource
   - module: seot.agent.sources.stub_sense_hat
     class: StubSenseHatSource
+  - module: seot.agent.sources.pi_camera
+    class: PiCameraSource
   - module: seot.agent.transformers.docker
     class: DockerTransformer

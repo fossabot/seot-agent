@@ -17,9 +17,6 @@ class StubSenseHatSource(BaseSource):
         self.humidity = 50.0
         self.pressure = 1013.0
 
-    async def startup(self):
-        logger.info("Starting StubSenseHatSource...")
-
     async def _run(self):
         while True:
             sigma = self.interval / 100.0

@@ -14,9 +14,6 @@ class SenseHatSource(BaseSource):
         self.interval = interval
         self.sense = SenseHat()
 
-    async def startup(self):
-        logger.info("Starting SenseHatSource...")
-
     async def _run(self):
         while True:
             data = {
