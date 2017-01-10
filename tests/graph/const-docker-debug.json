@@ -13,8 +13,7 @@
             "name": "docker",
             "type": "DockerTransformer",
             "args": {
-                "repo": "alpine",
-                "cmd": ["ls", "-la", "/tmp"]
+                "repo": "keichi/seot-test"
             },
             "to": ["debug"]
         },

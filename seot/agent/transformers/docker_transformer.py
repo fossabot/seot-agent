@@ -1,12 +1,15 @@
 import asyncio
 import shutil
 import tempfile
+from contextlib import suppress
 from logging import getLogger
 from pathlib import Path
 
 import docker
 
 from . import BaseTransformer
+from .. import dpp
+
 
 logger = getLogger(__name__)
 
@@ -40,16 +43,18 @@ class DockerTransformer(BaseTransformer):
         )
 
     async def cleanup(self):
-        if self.container and self.container.status == "running":
-            logger.info("Stopping docker container {0}".format(
-                self.container.short_id))
-            await self.loop.run_in_executor(None, self._stop_container)
+        self._dump_logs_task.cancel()
+        await asyncio.wait([self._dump_logs_task])
+
+        logger.info("Removing docker container {0}".format(
+            self.container.short_id))
+        await self.loop.run_in_executor(None, self._stop_container)
+
+        shutil.rmtree(str(self.tmp_dir_path))
 
         logger.info("Removing docker image {0}:{1}".format(
             self.repo, self.tag))
         await self.loop.run_in_executor(None, self._remove_image)
-
-        shutil.rmtree(str(self.tmp_dir_path))
 
     async def _process(self, data):
         await self.send_queue.put(data)
@@ -67,7 +72,8 @@ class DockerTransformer(BaseTransformer):
         self.client.images.pull(self.repo, tag=self.tag)
 
     def _remove_image(self):
-        self.client.images.remove(self.repo)
+        with suppress(docker.errors.APIError):
+            self.client.images.remove(self.repo)
 
     def _start_container(self):
         self.container = self.client.containers.run(
@@ -82,10 +88,12 @@ class DockerTransformer(BaseTransformer):
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
                                         follow=True):
-            logger.info(line)
+            logger.info(line.decode("utf-8").strip())
 
     def _stop_container(self):
-        self.container.stop()
+        if self.container.status == "running":
+            self.container.stop()
+        self.container.remove()
 
     async def _start_unix_server(self):
         self.tmp_dir_path = Path(tempfile.mkdtemp(prefix="seot-", dir="/tmp"))
@@ -100,4 +108,11 @@ class DockerTransformer(BaseTransformer):
 
         while True:
             data = await self.send_queue.get()
-            await self.recv_queue.put(data)
+
+            writer.write(dpp.encode(data))
+            resp = await reader.read(1024)
+
+            if not resp:
+                break
+
+            await self.recv_queue.put(dpp.decode(resp))
