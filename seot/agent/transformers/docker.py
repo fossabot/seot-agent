@@ -91,8 +91,7 @@ class DockerTransformer(BaseTransformer):
             logger.info(line.decode("utf-8").strip())
 
     def _stop_container(self):
-        if self.container.status == "running":
-            self.container.stop()
+        self.container.kill()
         self.container.remove()
 
     async def _start_unix_server(self):
