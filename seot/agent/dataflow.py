@@ -51,7 +51,9 @@ class Node(ABC):
         if self.running():
             raise RuntimeError("Node is already running")
 
-        logger.info("Starting " + self.__class__.__name__ + " " + self.name)
+        logger.info("Starting node {0} of type {1}".format(
+            self.name, self.__class__.__name__
+        ))
 
         self._task = asyncio.ensure_future(self._run(), loop=self.loop)
 
@@ -64,7 +66,9 @@ class Node(ABC):
         if not self.running():
             raise RuntimeError("Node is not running")
 
-        logger.info("Stopping " + self.__class__.__name__ + " " + self.name)
+        logger.info("Stopping node {0} of type {1}".format(
+            self.name, self.__class__.__name__
+        ))
 
         self._task.cancel()
 

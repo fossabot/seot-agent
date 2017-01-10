@@ -45,7 +45,9 @@ class GraphBuilder:
         for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
             if cls_name not in cls._REGISTERED_NODES:
-                raise RuntimeError("Node {0} is not loaded".format(cls_name))
+                raise RuntimeError("Node type {0} is not loaded".format(
+                    cls_name
+                ))
 
             node_cls = cls._REGISTERED_NODES[cls_name]
             node_args = node_def.get("args", {})
@@ -97,7 +99,7 @@ class GraphBuilder:
         # Now class node should be visible as a subclass of Node
         for node_cls in Node.all_subclasses():
             if node_cls.__name__ == cls_name:
-                logger.info("Loaded node {0} from {1}".format(
+                logger.info("Loaded node type {0} from module {1}".format(
                     cls_name, mod_name
                 ))
                 return node_cls
