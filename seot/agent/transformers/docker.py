@@ -20,7 +20,7 @@ class DockerTransformer(BaseTransformer):
         self.repo = repo
         self.tag = tag
         self.cmd = cmd
-        self.client = docker.from_env()
+        self.docker_client = docker.from_env()
         self.send_queue = asyncio.Queue()
         self.recv_queue = asyncio.Queue()
 
@@ -63,26 +63,26 @@ class DockerTransformer(BaseTransformer):
     def _health_check(self):
         ok = False
         try:
-            ok = self.client.ping()
+            ok = self.docker_client.ping()
         except:
             pass
 
         if not ok:
             raise RuntimeError("Failed to connect to docker server")
 
-        ver_info = self.client.version()
+        ver_info = self.docker_client.version()
         logger.info("Docker server version: {0}".format(ver_info["Version"]))
         logger.info("Docker API version: {0}".format(ver_info["ApiVersion"]))
 
     def _pull_image(self):
-        self.client.images.pull(self.repo, tag=self.tag)
+        self.docker_client.images.pull(self.repo, tag=self.tag)
 
     def _remove_image(self):
         with suppress(docker.errors.APIError):
-            self.client.images.remove(self.repo)
+            self.docker_client.images.remove(self.repo)
 
     def _start_container(self):
-        self.container = self.client.containers.run(
+        self.container = self.docker_client.containers.run(
             self.repo,
             command=self.cmd,
             volumes={
@@ -107,9 +107,10 @@ class DockerTransformer(BaseTransformer):
         await asyncio.start_unix_server(self._handle_client,
                                         path=str(self.sock_path),
                                         loop=self.loop)
+        )
 
-    async def _handle_client(self, reader, writer):
-        logger.info("Client has connected")
+    async def _handle_docker_client(self, reader, writer):
+        logger.info("Docker client has connected")
 
         while True:
             data = await self.send_queue.get()
