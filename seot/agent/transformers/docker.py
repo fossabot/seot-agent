@@ -61,7 +61,13 @@ class DockerTransformer(BaseTransformer):
         return await self.recv_queue.get()
 
     def _health_check(self):
-        if not self.client.ping():
+        ok = False
+        try:
+            ok = self.client.ping()
+        except:
+            pass
+
+        if not ok:
             raise RuntimeError("Failed to connect to docker server")
 
         ver_info = self.client.version()
