@@ -17,6 +17,7 @@ PoC code for the Sharing Economy of Things platform.
 ### Nodes
 
 - `DockerTransformer`
+    - Requires docker
     - Requires running user to be in the `docker` group
 - `SenseHatSource`
     - Requires RaspberryPi and Sense Hat hardware
