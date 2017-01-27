@@ -43,6 +43,8 @@ class DockerTransformer(BaseTransformer):
         )
 
     async def cleanup(self):
+        self.unix_server.close()
+
         self._dump_logs_task.cancel()
         await asyncio.wait([self._dump_logs_task])
 
@@ -97,20 +99,22 @@ class DockerTransformer(BaseTransformer):
             logger.info(line.decode("utf-8").strip())
 
     def _stop_container(self):
-        self.container.kill()
+        if self.container.status == "running":
+            self.container.kill()
         self.container.remove()
 
     async def _start_unix_server(self):
         self.tmp_dir_path = Path(tempfile.mkdtemp(prefix="seot-", dir="/tmp"))
         self.sock_path = self.tmp_dir_path / "seot.sock"
 
-        await asyncio.start_unix_server(self._handle_client,
-                                        path=str(self.sock_path),
-                                        loop=self.loop)
+        self.unix_server = await asyncio.start_unix_server(
+            self._handle_unix_client,
+            path=str(self.sock_path),
+            loop=self.loop
         )
 
-    async def _handle_docker_client(self, reader, writer):
-        logger.info("Docker client has connected")
+    async def _handle_unix_client(self, reader, writer):
+        logger.info("A docker client has connected")
 
         while True:
             data = await self.send_queue.get()
