@@ -7,20 +7,20 @@ from aiodns.error import DNSError
 import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 
+import zmq.asyncio
+
 from . import config, meta
 from .graph_builder import GraphBuilder
 
 logger = logging.getLogger(__name__)
 
 
-class CPPServer:
+class Agent:
     BASE_URL = None
 
-    def __init__(self, loop=None):
+    def __init__(self):
         self.__class__.BASE_URL = config.get("cpp.base_url")
-        self.loop = loop
-        if loop is None:
-            self.loop = asyncio.get_event_loop()
+        self.loop = zmq.asyncio.install()
 
     async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
@@ -89,9 +89,22 @@ class CPPServer:
             await self._heartbeat()
             await asyncio.sleep(sleep_length)
 
-    def start(self):
-        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
-
     def stop(self):
         if not self.task.cancelled() and not self.task.done():
             self.task.set_result(None)
+
+    def run(self):
+        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
+
+        # Run main event loop
+        logger.info("Starting main event loop...")
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            logger.info("Received keyboard interrupt")
+        finally:
+            logger.info("Shutting down...")
+
+            self.stop()
+
+        self.loop.close()
