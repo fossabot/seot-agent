@@ -21,6 +21,8 @@ class Agent:
     def __init__(self):
         self.__class__.BASE_URL = config.get("cpp.base_url")
         self.loop = zmq.asyncio.install()
+        # Whether this agent is running a job
+        self.busy = False
 
     async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
@@ -66,22 +68,30 @@ class Agent:
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "nodes": [node["class"] for node in config.get("nodes")],
-            "busy": False
+            "busy": self.busy
         })
 
-        if resp is not None:
-            if resp.get("job_offer", False):
-                job_id = resp["job_id"]
-                logger.info("Got job offer for job {0}".format(job_id))
-                job = await self._get_job(job_id)
+        if resp is None:
+            return
 
-                await self._accept_job(job_id)
-                del job["application_id"]
-                del job["job_id"]
+        if resp.get("job_offer", False) and not self.busy:
+            job_id = resp["job_id"]
+            logger.info("Got job offer for job {0}".format(job_id))
+            job = await self._get_job(job_id)
 
-                self.graph = GraphBuilder.from_obj(job)
-                logger.info("Built graph from job definition")
-                self.graph.start()
+            await self._accept_job(job_id)
+            del job["application_id"]
+            del job["job_id"]
+
+            self.graph = GraphBuilder.from_obj(job)
+            logger.info("Built graph from job definition")
+            self.graph.start()
+            self.busy = True
+
+        elif resp.get("job_stop", False) and self.busy:
+            if self.graph.running():
+                self.graph.stop()
+                self.busy = False
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
