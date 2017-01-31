@@ -79,8 +79,9 @@ class Agent:
                 del job["application_id"]
                 del job["job_id"]
 
-                GraphBuilder.from_obj(job)
+                self.graph = GraphBuilder.from_obj(job)
                 logger.info("Built graph from job definition")
+                self.graph.start()
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
@@ -106,5 +107,8 @@ class Agent:
             logger.info("Shutting down...")
 
             self.stop()
+
+            if self.graph.running():
+                self.graph.stop()
 
         self.loop.close()
