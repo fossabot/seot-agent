@@ -7,20 +7,23 @@ from aiodns.error import DNSError
 import aiohttp
 from aiohttp.errors import ClientOSError, ClientTimeoutError
 
+import zmq.asyncio
+
 from . import config, meta
 from .graph_builder import GraphBuilder
 
 logger = logging.getLogger(__name__)
 
 
-class CPPServer:
+class Agent:
     BASE_URL = None
 
-    def __init__(self, loop=None):
+    def __init__(self):
         self.__class__.BASE_URL = config.get("cpp.base_url")
-        self.loop = loop
-        if loop is None:
-            self.loop = asyncio.get_event_loop()
+        self.loop = zmq.asyncio.install()
+        # Whether this agent is running a job
+        self.busy = False
+        self.graph = None
 
     async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
@@ -61,26 +64,35 @@ class CPPServer:
         logger.info("Sending heartbeat to SEoT server...")
 
         resp = await self._request("POST", "/heartbeat", data={
-            "user_id": config.get("agent.user_id"),
+            "user_name": config.get("agent.user_name"),
             "agent_id": config.get_state("agent_id"),
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "nodes": [node["class"] for node in config.get("nodes")],
-            "busy": False
+            "busy": self.busy
         })
 
-        if resp is not None:
-            if resp.get("job_offer", False):
-                job_id = resp["job_id"]
-                logger.info("Got job offer for job {0}".format(job_id))
-                job = await self._get_job(job_id)
+        if resp is None:
+            return
 
-                await self._accept_job(job_id)
-                del job["application_id"]
-                del job["job_id"]
+        if resp.get("run", False) and not self.busy:
+            job_id = resp["job_id"]
+            logger.info("Got job offer for job {0}".format(job_id))
+            job = await self._get_job(job_id)
 
-                GraphBuilder.from_obj(job)
-                logger.info("Built graph from job definition")
+            await self._accept_job(job_id)
+            del job["application_id"]
+            del job["job_id"]
+
+            self.graph = GraphBuilder.from_obj(job)
+            logger.info("Built graph from job definition")
+            self.graph.start()
+            self.busy = True
+
+        elif resp.get("kill", False) and self.busy:
+            if self.graph and self.graph.running():
+                self.graph.stop()
+                self.busy = False
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
@@ -89,9 +101,25 @@ class CPPServer:
             await self._heartbeat()
             await asyncio.sleep(sleep_length)
 
-    def start(self):
-        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
-
     def stop(self):
         if not self.task.cancelled() and not self.task.done():
             self.task.set_result(None)
+
+    def run(self):
+        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
+
+        # Run main event loop
+        logger.info("Starting main event loop...")
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            logger.info("Received keyboard interrupt")
+        finally:
+            logger.info("Shutting down...")
+
+            self.stop()
+
+            if self.graph and self.graph.running():
+                self.graph.stop()
+
+        self.loop.close()
