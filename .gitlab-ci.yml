@@ -1,13 +1,16 @@
 image: python:3
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
 before_script:
-  - export PIP_CACHE_DIR=".pip-cache"
-  - pip install --upgrade pip
+  - pip install --upgrade pip setuptools
   - pip install -r requirements.txt
 
 cache:
   paths:
-    - .pip-cache
+    - "$CI_PROJECT_DIR/pip-cache"
+  key: "$CI_PROJECT_ID"
 
 stages:
   - test
