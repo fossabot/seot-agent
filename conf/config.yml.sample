@@ -1,6 +1,6 @@
 ---
 agent:
-  user_id: keichi
+  user_name: keichi
   coordinate:
     longitude: 34.8222789
     latitude: 135.5258597

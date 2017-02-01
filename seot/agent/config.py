@@ -21,7 +21,7 @@ _state = {}
 
 _CONFIG_SCHEMA = Schema({
     "agent": {
-        "user_id": str,
+        "user_name": str,
         "coordinate": {
             "longitude": float,
             "latitude": float

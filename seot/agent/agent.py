@@ -63,7 +63,7 @@ class Agent:
         logger.info("Sending heartbeat to SEoT server...")
 
         resp = await self._request("POST", "/heartbeat", data={
-            "user_id": config.get("agent.user_id"),
+            "user_name": config.get("agent.user_name"),
             "agent_id": config.get_state("agent_id"),
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
