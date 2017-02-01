@@ -74,7 +74,7 @@ class Agent:
         if resp is None:
             return
 
-        if resp.get("job_offer", False) and not self.busy:
+        if resp.get("run", False) and not self.busy:
             job_id = resp["job_id"]
             logger.info("Got job offer for job {0}".format(job_id))
             job = await self._get_job(job_id)
@@ -88,7 +88,7 @@ class Agent:
             self.graph.start()
             self.busy = True
 
-        elif resp.get("job_stop", False) and self.busy:
+        elif resp.get("kill", False) and self.busy:
             if self.graph.running():
                 self.graph.stop()
                 self.busy = False
