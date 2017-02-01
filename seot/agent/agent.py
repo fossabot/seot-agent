@@ -23,6 +23,7 @@ class Agent:
         self.loop = zmq.asyncio.install()
         # Whether this agent is running a job
         self.busy = False
+        self.graph = None
 
     async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
@@ -89,7 +90,7 @@ class Agent:
             self.busy = True
 
         elif resp.get("kill", False) and self.busy:
-            if self.graph.running():
+            if self.graph and self.graph.running():
                 self.graph.stop()
                 self.busy = False
 
@@ -118,7 +119,7 @@ class Agent:
 
             self.stop()
 
-            if self.graph.running():
+            if self.graph and self.graph.running():
                 self.graph.stop()
 
         self.loop.close()
