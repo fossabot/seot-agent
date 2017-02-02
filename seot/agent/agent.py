@@ -21,9 +21,8 @@ class Agent:
     def __init__(self):
         self.__class__.BASE_URL = config.get("cpp.base_url")
         self.loop = zmq.asyncio.install()
-        # Whether this agent is running a job
-        self.busy = False
-        self.graph = None
+        # Job UUID -> Graph
+        self.jobs = {}
 
     async def _request(self, method, endpoint, data=None, content_type=None):
         url = self.__class__.BASE_URL + endpoint
@@ -69,14 +68,14 @@ class Agent:
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "nodes": [node["class"] for node in config.get("nodes")],
-            "busy": self.busy
         })
 
         if resp is None:
             return
 
-        if resp.get("run", False) and not self.busy:
-            job_id = resp["job_id"]
+        job_id = resp.get("job_id")
+
+        if resp.get("run", False) and job_id:
             logger.info("Got job offer for job {0}".format(job_id))
             job = await self._get_job(job_id)
 
@@ -84,15 +83,20 @@ class Agent:
             del job["application_id"]
             del job["job_id"]
 
-            self.graph = GraphBuilder.from_obj(job)
-            logger.info("Built graph from job definition")
-            self.graph.start()
-            self.busy = True
+            graph = GraphBuilder.from_obj(job)
+            self.jobs[job_id] = graph
 
-        elif resp.get("kill", False) and self.busy:
-            if self.graph and self.graph.running():
-                self.graph.stop()
-                self.busy = False
+            logger.info("Starting job {0}".format(job_id))
+            graph.start()
+
+        elif resp.get("kill", False) and job_id:
+            graph = self.jobs.get(job_id)
+            if not graph:
+                return
+
+            if graph.running():
+                logger.info("Terminating job {0}".format(job_id))
+                graph.stop()
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
@@ -119,7 +123,11 @@ class Agent:
 
             self.stop()
 
-            if self.graph and self.graph.running():
-                self.graph.stop()
+            for job_id, graph in self.jobs.items():
+                if not graph.running():
+                    continue
+
+                logger.info("Terminating job {0}".format(job_id))
+                graph.stop()
 
         self.loop.close()
