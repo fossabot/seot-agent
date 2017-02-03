@@ -26,7 +26,6 @@ class BaseSink(Node):
         while True:
             input_data = await self._queue.get()
             await self._process(input_data)
-            self._queue.task_done()
 
 
 class DebugSink(BaseSink):

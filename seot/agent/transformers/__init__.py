@@ -16,9 +16,9 @@ class SimpleTransformer(BaseSource, BaseSink):
         while True:
             input_data = await self._queue.get()
             output_data = await self._process(input_data)
-            await self._emit(output_data)
-            self._queue.task_done()
 
+            if output_data is not None:
+                await self._emit(output_data)
 
 
 class IdentityTransformer(SimpleTransformer):
