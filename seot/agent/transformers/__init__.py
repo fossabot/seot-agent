@@ -4,7 +4,7 @@ from ..sinks import BaseSink
 from ..sources import BaseSource
 
 
-class BaseTransformer(BaseSource, BaseSink):
+class SimpleTransformer(BaseSource, BaseSink):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -20,12 +20,13 @@ class BaseTransformer(BaseSource, BaseSink):
             self._queue.task_done()
 
 
-class IdentityTransformer(BaseTransformer):
+
+class IdentityTransformer(SimpleTransformer):
     async def _process(self, data):
         return data
 
 
-class LambdaTransformer(BaseTransformer):
+class LambdaTransformer(SimpleTransformer):
     def __init__(self, func=None, **kwargs):
         super().__init__(**kwargs)
         self.func = func

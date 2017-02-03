@@ -7,14 +7,14 @@ from pathlib import Path
 
 import docker
 
-from . import BaseTransformer
+from . import SimpleTransformer
 from .. import dpp
 
 
 logger = getLogger(__name__)
 
 
-class DockerTransformer(BaseTransformer):
+class DockerTransformer(SimpleTransformer):
     def __init__(self, repo=None, tag=None, cmd=None, **kwargs):
         super().__init__(**kwargs)
         self.repo = repo
