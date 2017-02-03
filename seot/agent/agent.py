@@ -70,6 +70,8 @@ class Agent:
             "nodes": [node["class"] for node in config.get("nodes")],
         })
 
+        logger.info("Received response for heartbeat")
+
         if resp is None:
             return
 
@@ -77,6 +79,11 @@ class Agent:
 
         if resp.get("run", False) and job_id:
             logger.info("Got job offer for job {0}".format(job_id))
+
+            if job_id in self.jobs:
+                logger.warning("Already running job {0}".format(job_id))
+                return
+
             job = await self._get_job(job_id)
 
             await self._accept_job(job_id)
@@ -92,6 +99,7 @@ class Agent:
         elif resp.get("kill", False) and job_id:
             graph = self.jobs.get(job_id)
             if not graph:
+                logger.warning("Unknown job {0}".format(job_id))
                 return
 
             if graph.running():
