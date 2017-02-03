@@ -39,6 +39,12 @@ class Agent:
                 async with session.request(method=method, url=url, data=data,
                                            timeout=10,
                                            headers=headers) as resp:
+
+                    if 400 <= resp.status:
+                        logger.error(resp.reason)
+                        logger.error(await resp.text())
+                        return
+
                     return await resp.json()
             except DNSError:
                 logger.error("Could not resolve name")
