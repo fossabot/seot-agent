@@ -47,5 +47,5 @@ def log_quit_message():
 
 def configure_logging():
     """ Configure logging and enable colorlog """
-    log_ini = (Path(__file__) / "../../../conf/log.ini").resolve()
+    log_ini = (Path(__file__) / "../conf/log.ini").resolve()
     logging.config.fileConfig(str(log_ini), disable_existing_loggers=False)

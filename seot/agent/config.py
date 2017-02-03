@@ -92,7 +92,7 @@ def _init_config():
     if not CONFIG_FILE_PATH.parent.exists():
         CONFIG_FILE_PATH.parent.mkdir(parents=True)
 
-    src = (Path(__file__) / "../../../conf/config.yml.sample").resolve()
+    src = (Path(__file__) / "../conf/config.yml.sample").resolve()
     dst = CONFIG_FILE_PATH.parent / "config.yml.sample"
 
     try:
