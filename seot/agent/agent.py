@@ -121,7 +121,10 @@ class Agent:
         sleep_length = config.get("cpp.heartbeat_interval")
 
         while True:
-            await self._heartbeat()
+            try:
+                await self._heartbeat()
+            except Exception as e:
+                logger.error("Heartbeat failed: {0}".format(e))
             await asyncio.sleep(sleep_length)
 
     def stop(self):
