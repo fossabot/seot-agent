@@ -59,6 +59,10 @@ class Agent:
         logger.info("Accepting job {0}".format(job_id))
         return await self._request("POST", "/job/{0}/accept".format(job_id))
 
+    async def _reject_job(self, job_id):
+        logger.info("Rejecting job {0}".format(job_id))
+        return await self._request("POST", "/job/{0}/reject".format(job_id))
+
     async def _heartbeat(self):
         logger.info("Sending heartbeat to SEoT server...")
 
@@ -82,6 +86,7 @@ class Agent:
 
             if job_id in self.jobs:
                 logger.warning("Already running job {0}".format(job_id))
+                await self._reject_job(job_id)
                 return
 
             job = await self._get_job(job_id)
