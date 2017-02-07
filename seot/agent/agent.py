@@ -107,7 +107,7 @@ class Agent:
             graph = GraphBuilder.from_obj(job)
             self.jobs[job_id] = graph
 
-            graph.start()
+            await graph.start()
 
         elif "kill" in resp and resp["kill"]:
             job_id = resp["kill"]
@@ -118,7 +118,7 @@ class Agent:
 
             if graph.running():
                 logger.info("Terminating job {0}".format(job_id))
-                graph.stop()
+                await graph.stop()
 
             await self._notify_job_stop(job_id)
 
@@ -160,6 +160,6 @@ class Agent:
                     continue
 
                 logger.info("Terminating job {0}".format(job_id))
-                graph.stop()
+                self.loop.run_until_complete(graph.stop())
 
         self.loop.close()
