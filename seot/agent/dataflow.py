@@ -150,33 +150,32 @@ class Graph:
 
         return list(result)
 
-    def start(self):
+    async def start(self):
         """
-        Start this dataflow graph. This method returns immediately and the
-        dataflow will be executed in a background task.
+        Start this dataflow graph.
         """
         if self.running():
             raise RuntimeError("Graph is already running")
 
         nodes = self._topological_sort(self.sources)
 
+        # Call .startup() to initializate each node
+        done, pending = await asyncio.wait(
+            [node.startup() for node in nodes],
+            loop=self.loop, return_when=FIRST_EXCEPTION
+        )
+        # Let's check if initialization was successful
+        for future in done:
+            try:
+                future.result()
+            except Exception as e:
+                for f in pending:
+                    f.cancel()
+
+                logger.error("Graph failed to start: {0}".format(e))
+                raise RuntimeError("Dataflow graph failed to start")
+
         async def start():
-            # Call .startup() to initializate each node
-            done, pending = await asyncio.wait(
-                [node.startup() for node in nodes],
-                loop=self.loop, return_when=FIRST_EXCEPTION
-            )
-            # Let's check if initialization was successful
-            for future in done:
-                try:
-                    future.result()
-                except Exception as e:
-                    for f in pending:
-                        f.cancel()
-
-                    logger.error("Graph failed to start: {0}".format(e))
-                    raise RuntimeError("Dataflow graph failed to start")
-
             self._running = True
 
             # Now we actually launch each node by calling .start()
@@ -202,10 +201,9 @@ class Graph:
 
         asyncio.ensure_future(start(), loop=self.loop)
 
-    def stop(self):
+    async def stop(self):
         """
-        Stop this dataflow graph. This method will block until the entire
-        dataflow is stopped.
+        Stop this dataflow graph.
         """
         if not self.running():
             raise RuntimeError("Graph is not running")
@@ -216,10 +214,8 @@ class Graph:
         tasks = [node.stop() for node in nodes if node.running()]
         if tasks:
             with suppress(asyncio.CancelledError):
-                task = asyncio.wait(tasks, loop=self.loop)
-                asyncio.ensure_future(task, loop=self.loop)
+                await asyncio.wait(tasks, loop=self.loop)
 
         # Do cleanup tasks
         tasks = [node.cleanup() for node in nodes]
-        task = asyncio.wait(tasks, loop=self.loop)
-        asyncio.ensure_future(task, loop=self.loop)
+        await asyncio.wait(tasks, loop=self.loop)
