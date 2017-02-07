@@ -4,7 +4,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
 
 before_script:
-  - pip install --upgrade pip setuptools
+  - pip install --upgrade pip setuptools wheel
   - pip install -r requirements.txt
 
 cache:
@@ -14,8 +14,17 @@ cache:
 
 stages:
   - test
+  - build
 
-test_job:
+check_style:
   stage: test
   script:
     - flake8
+
+build_wheel:
+  stage: build
+  script:
+    - python setup.py bdist_wheel
+  artifacts:
+    paths:
+      - dist/
