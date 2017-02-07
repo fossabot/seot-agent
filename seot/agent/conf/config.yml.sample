@@ -5,7 +5,8 @@ agent:
     longitude: 34.8222789
     latitude: 135.5258597
 
-cpp: {}
+cpp:
+  base_url: http://seot-staging.mars.ais.cmc.osaka-u.ac.jp/api
 
 nodes:
   - module: seot.agent.sinks.zmq
