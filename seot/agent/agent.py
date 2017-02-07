@@ -61,9 +61,13 @@ class Agent:
         logger.info("Getting job detail {0}".format(job_id))
         return await self._request("GET", "/job/" + job_id)
 
-    async def _accept_job(self, job_id):
-        logger.info("Accepting job {0}".format(job_id))
+    async def _notify_job_start(self, job_id):
+        logger.info("Starting job {0}".format(job_id))
         return await self._request("POST", "/job/{0}/accept".format(job_id))
+
+    async def _notify_job_stop(self, job_id):
+        logger.info("Stopped job {0}".format(job_id))
+        return await self._request("POST", "/job/{0}/stop".format(job_id))
 
     async def _reject_job(self, job_id):
         logger.info("Rejecting job {0}".format(job_id))
@@ -85,9 +89,8 @@ class Agent:
         if resp is None:
             return
 
-        job_id = resp.get("job_id")
-
-        if resp.get("run", False) and job_id:
+        if "run" in resp and resp["run"]:
+            job_id = resp["run"]
             logger.info("Got job offer for job {0}".format(job_id))
 
             if job_id in self.jobs:
@@ -97,17 +100,17 @@ class Agent:
 
             job = await self._get_job(job_id)
 
-            await self._accept_job(job_id)
+            await self._notify_job_start(job_id)
             del job["application_id"]
             del job["job_id"]
 
             graph = GraphBuilder.from_obj(job)
             self.jobs[job_id] = graph
 
-            logger.info("Starting job {0}".format(job_id))
             graph.start()
 
-        elif resp.get("kill", False) and job_id:
+        elif "kill" in resp and resp["kill"]:
+            job_id = resp["kill"]
             graph = self.jobs.get(job_id)
             if not graph:
                 logger.warning("Unknown job {0}".format(job_id))
@@ -116,6 +119,10 @@ class Agent:
             if graph.running():
                 logger.info("Terminating job {0}".format(job_id))
                 graph.stop()
+
+            await self._notify_job_stop(job_id)
+
+            del self.jobs[job_id]
 
         else:
             logger.info("Nothing to do")
