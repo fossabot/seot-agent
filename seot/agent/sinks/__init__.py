@@ -35,6 +35,8 @@ class DebugSink(BaseSink):
         self.level = level
 
     def _sanitize(self, data):
+        if isinstance(data, str):
+            return data
         if isinstance(data, bytes):
             return "<binary data ({0} bytes)>".format(len(data))
         elif isinstance(data, collections.Mapping):
