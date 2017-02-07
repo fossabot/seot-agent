@@ -117,6 +117,9 @@ class Agent:
                 logger.info("Terminating job {0}".format(job_id))
                 graph.stop()
 
+        else:
+            logger.info("Nothing to do")
+
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
 
