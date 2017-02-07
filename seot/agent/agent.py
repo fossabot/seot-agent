@@ -122,6 +122,8 @@ class Agent:
 
             await self._notify_job_stop(job_id)
 
+            del self.jobs[job_id]
+
         else:
             logger.info("Nothing to do")
 
