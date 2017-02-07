@@ -89,9 +89,8 @@ class Agent:
         if resp is None:
             return
 
-        job_id = resp.get("job_id")
-
-        if resp.get("run", False) and job_id:
+        if "run" in resp:
+            job_id = resp["run"]
             logger.info("Got job offer for job {0}".format(job_id))
 
             if job_id in self.jobs:
@@ -110,7 +109,8 @@ class Agent:
 
             graph.start()
 
-        elif resp.get("kill", False) and job_id:
+        elif "kill" in resp:
+            job_id = resp["stop"]
             graph = self.jobs.get(job_id)
             if not graph:
                 logger.warning("Unknown job {0}".format(job_id))
