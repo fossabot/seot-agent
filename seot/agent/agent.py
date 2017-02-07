@@ -110,7 +110,7 @@ class Agent:
             graph.start()
 
         elif "kill" in resp:
-            job_id = resp["stop"]
+            job_id = resp["kill"]
             graph = self.jobs.get(job_id)
             if not graph:
                 logger.warning("Unknown job {0}".format(job_id))
