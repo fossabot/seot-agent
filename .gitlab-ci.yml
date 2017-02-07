@@ -14,8 +14,17 @@ cache:
 
 stages:
   - test
+  - build
 
-test_job:
+check_style:
   stage: test
   script:
     - flake8
+
+build_wheel:
+  stage: build
+  script:
+    - python setup.py bdist_wheel
+  artifacts:
+    paths:
+      - dist/
