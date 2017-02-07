@@ -89,7 +89,7 @@ class Agent:
         if resp is None:
             return
 
-        if "run" in resp:
+        if "run" in resp and resp["run"]:
             job_id = resp["run"]
             logger.info("Got job offer for job {0}".format(job_id))
 
@@ -109,7 +109,7 @@ class Agent:
 
             graph.start()
 
-        elif "kill" in resp:
+        elif "kill" in resp and resp["kill"]:
             job_id = resp["kill"]
             graph = self.jobs.get(job_id)
             if not graph:
