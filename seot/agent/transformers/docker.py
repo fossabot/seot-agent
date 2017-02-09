@@ -7,22 +7,22 @@ from pathlib import Path
 
 import docker
 
-from . import SimpleTransformer
-from .. import dpp
+import msgpack
+
+from . import BaseTransformer
 
 
 logger = getLogger(__name__)
 
 
-class DockerTransformer(SimpleTransformer):
+class DockerTransformer(BaseTransformer):
     def __init__(self, repo=None, tag=None, cmd=None, **kwargs):
         super().__init__(**kwargs)
         self.repo = repo
         self.tag = tag
         self.cmd = cmd
         self.docker_client = docker.from_env()
-        self.send_queue = asyncio.Queue()
-        self.recv_queue = asyncio.Queue()
+        self.clients = {}
 
     async def startup(self):
         self._health_check()
@@ -59,8 +59,9 @@ class DockerTransformer(SimpleTransformer):
         await self.loop.run_in_executor(None, self._remove_image)
 
     async def _process(self, data):
-        await self.send_queue.put(data)
-        return await self.recv_queue.get()
+        for (reader, writer) in self.clients.values():
+            writer.write(msgpack.packb(data))
+            await writer.drain()
 
     def _health_check(self):
         ok = False
@@ -108,21 +109,33 @@ class DockerTransformer(SimpleTransformer):
         self.sock_path = self.tmp_dir_path / "seot.sock"
 
         self.unix_server = await asyncio.start_unix_server(
-            self._handle_unix_client,
+            self._accept_unix_client,
             path=str(self.sock_path),
             loop=self.loop
         )
 
-    async def _handle_unix_client(self, reader, writer):
+    async def _accept_unix_client(self, reader, writer):
         logger.info("A docker client has connected")
 
+        task = asyncio.ensure_future(self._handle_unix_client(reader, writer),
+                                     loop=self.loop)
+        self.clients[task] = (reader, writer)
+
+        def client_done(task):
+            logger.info("A docker client has disconnected")
+            del self.clients[task]
+
+        task.add_done_callback(client_done)
+
+    async def _handle_unix_client(self, reader, writer):
+        unpacker = msgpack.Unpacker(encoding="utf-8")
+
         while True:
-            data = await self.send_queue.get()
-
-            writer.write(dpp.encode(data))
-            resp = await reader.read(1024)
-
-            if not resp:
+            buf = await reader.read(1024)
+            # Client has disconnected
+            if not buf:
                 break
 
-            await self.recv_queue.put(dpp.decode(resp))
+            unpacker.feed(buf)
+            for msg in unpacker:
+                await self._emit(msg)
