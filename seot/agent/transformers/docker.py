@@ -99,7 +99,7 @@ class DockerTransformer(SimpleTransformer):
             logger.info(line.decode("utf-8").strip())
 
     def _stop_container(self):
-        if self.container.status == "running":
+        if self.container.status in ["running", "created"]:
             self.container.kill()
         self.container.remove()
 
