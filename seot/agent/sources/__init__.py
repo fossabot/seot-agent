@@ -20,12 +20,13 @@ class BaseSource(Node):
         return node
 
     async def _emit(self, data):
-        data["meta"] = {
-            "agent_id": config.get_state("agent_id"),
-            "longitude": config.get("agent.coordinate.longitude"),
-            "latitude": config.get("agent.coordinate.latitude"),
-            "timestamp": time.time()
-        }
+        if "meta" not in data:
+            data["meta"] = {
+                "agent_id": config.get_state("agent_id"),
+                "longitude": config.get("agent.coordinate.longitude"),
+                "latitude": config.get("agent.coordinate.latitude"),
+                "timestamp": time.time()
+            }
 
         if not self._next_nodes:
             return

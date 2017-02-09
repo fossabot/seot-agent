@@ -4,7 +4,12 @@ from ..sinks import BaseSink
 from ..sources import BaseSource
 
 
-class SimpleTransformer(BaseSource, BaseSink):
+class BaseTransformer(BaseSource, BaseSink):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class SimpleTransformer(BaseTransformer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
