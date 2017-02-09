@@ -29,8 +29,8 @@ PoC code for the Sharing Economy of Things platform.
 1. Copy `config.yml.sample` to `~/.config/seot/config.yml` and adjust config
    values.
 2. Optionally, use direnv and virtualenv to create an isolated environment.
-3. Install dependencies: `pip install -r requirements.txt`
-4. Launch SEoT Agent: `python -m seot.agent`
+3. Install dependencies: `pip3 install -r requirements.txt`
+4. Launch SEoT Agent: `python3 -m seot.agent`
 
 ## How to package
 
