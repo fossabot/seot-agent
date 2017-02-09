@@ -9,6 +9,8 @@ cpp:
   base_url: https://seot-staging.mars.ais.cmc.osaka-u.ac.jp/api
 
 nodes:
+  - module: seot.agent.sinks.fs
+    class: FileSystemSink
   - module: seot.agent.sinks.zmq
     class: ZMQSink
   - module: seot.agent.sinks.mongodb
