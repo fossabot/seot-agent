@@ -48,7 +48,7 @@ class DockerTransformer(BaseTransformer):
         self._dump_logs_task.cancel()
         await asyncio.wait([self._dump_logs_task])
 
-        logger.info("Removing docker container {0}".format(
+        logger.info("Stopping and removing docker container {0}".format(
             self.container.short_id))
         await self.loop.run_in_executor(None, self._stop_container)
 
