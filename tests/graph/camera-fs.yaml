@@ -1,0 +1,12 @@
+---
+nodes:
+- name: camera
+  type: PiCameraSource
+  to:
+  - fs
+- name: fs
+  type: FileSystemSink
+  args:
+    prefix: picam
+    postfix: .jpg
+    data_key: image
