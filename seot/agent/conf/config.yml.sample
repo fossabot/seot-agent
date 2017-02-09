@@ -6,7 +6,7 @@ agent:
     latitude: 135.5258597
 
 cpp:
-  base_url: http://seot-staging.mars.ais.cmc.osaka-u.ac.jp/api
+  base_url: https://seot-staging.mars.ais.cmc.osaka-u.ac.jp/api
 
 nodes:
   - module: seot.agent.sinks.zmq
