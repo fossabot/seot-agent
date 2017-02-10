@@ -181,5 +181,6 @@ def discover_facts():
         "kernel": kernel,
         "os": os_dist,
         "user": getpass.getuser(),
-        "ip": _discover_ip()
+        "ip": _discover_ip(),
+        "hostname": platform.uname()[1]
     }
