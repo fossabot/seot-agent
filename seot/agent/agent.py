@@ -82,6 +82,7 @@ class Agent:
             "longitude": config.get("agent.coordinate.longitude"),
             "latitude": config.get("agent.coordinate.latitude"),
             "nodes": [node["class"] for node in config.get("nodes")],
+            "facts": config.get("facts")
         })
 
         logger.info("Received response for heartbeat")

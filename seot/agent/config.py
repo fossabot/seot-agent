@@ -153,7 +153,7 @@ def discover_fact():
     elif kernel == "Linux":
         os_dist = " ".join(platform.linux_distribution())
 
-    _config["fact"] = {
+    _config["facts"] = {
         "agent_version": meta.__version__,
         "arch": platform.machine(),
         "processor": platform.processor(),
