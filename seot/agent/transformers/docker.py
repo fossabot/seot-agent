@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 
 
 class DockerTransformer(BaseTransformer):
-    def __init__(self, repo=None, tag=None, cmd=None, **kwargs):
+    def __init__(self, repo=None, tag="latest", cmd=None, **kwargs):
         super().__init__(**kwargs)
         self.repo = repo
         self.tag = tag
@@ -88,6 +88,7 @@ class DockerTransformer(BaseTransformer):
         self.container = self.docker_client.containers.run(
             self.repo,
             command=self.cmd,
+            network_disabled=True,
             volumes={
                 str(self.sock_path): {"bind": "/tmp/seot.sock", "mode": "rw"}
             },
