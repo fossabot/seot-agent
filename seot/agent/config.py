@@ -2,9 +2,11 @@ import getpass
 import logging
 import platform
 import shutil
+import socket
 import sys
 import uuid
 from pathlib import Path
+from urllib.parse import urlparse
 
 from schema import Optional, Schema, SchemaError
 
@@ -144,7 +146,22 @@ def load():
         _init_state()
 
 
-def discover_fact():
+def _discover_ip():
+    url = urlparse(get("cpp.base_url"))
+    host = url.hostname
+    if url.port:
+        port = url.port
+    if url.scheme == "http":
+        port = 80
+    elif url.scheme == "https":
+        port = 443
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        return s.getsockname()[0]
+
+
+def discover_facts():
     """ Discover various platform information """
     kernel = platform.system()
     os_dist = "unknown"
@@ -153,7 +170,7 @@ def discover_fact():
     elif kernel == "Linux":
         os_dist = " ".join(platform.linux_distribution())
 
-    _config["fact"] = {
+    _config["facts"] = {
         "agent_version": meta.__version__,
         "arch": platform.machine(),
         "processor": platform.processor(),
@@ -163,5 +180,6 @@ def discover_fact():
         ]),
         "kernel": kernel,
         "os": os_dist,
-        "user": getpass.getuser()
+        "user": getpass.getuser(),
+        "ip": _discover_ip()
     }

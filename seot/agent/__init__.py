@@ -19,7 +19,7 @@ def main():
     config.load()
 
     # Discover platform information
-    config.discover_fact()
+    config.discover_facts()
 
     # Print startup message
     log_startup_message()
