@@ -76,16 +76,19 @@ class Agent:
     async def _heartbeat(self):
         logger.debug("Sending heartbeat to SEoT server...")
 
-        resp = await self._request("POST", "/heartbeat", data={
-            "user_name": config.get("agent.user_name"),
-            "agent_id": config.get_state("agent_id"),
-            "longitude": config.get("agent.coordinate.longitude"),
-            "latitude": config.get("agent.coordinate.latitude"),
-            "nodes": [node["class"] for node in config.get("nodes")],
-            "facts": config.get("facts")
-        })
+        try:
+            resp = await self._request("POST", "/heartbeat", data={
+                "user_name": config.get("agent.user_name"),
+                "agent_id": config.get_state("agent_id"),
+                "longitude": config.get("agent.coordinate.longitude"),
+                "latitude": config.get("agent.coordinate.latitude"),
+                "nodes": [node["class"] for node in config.get("nodes")],
+                "facts": config.get("facts")
+            })
+        except:
+            raise
 
-        logger.info("Received response for heartbeat")
+        logger.debug("Received response for heartbeat")
 
         if resp is None:
             return
