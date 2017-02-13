@@ -151,7 +151,7 @@ def _discover_ip():
     host = url.hostname
     if url.port:
         port = url.port
-    if url.scheme == "http":
+    elif url.scheme == "http":
         port = 80
     elif url.scheme == "https":
         port = 443
