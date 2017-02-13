@@ -17,8 +17,8 @@ class ZMQSource(BaseSource):
 
     async def startup(self):
         self.sock = self.ctx.socket(zmq.PULL)
-        logger.info("ZMQ listening at {0}".format(self.url))
         self.sock.bind(self.url)
+        logger.info("ZMQ listening at {0}".format(self.url))
 
     async def _run(self):
         while True:
