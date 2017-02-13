@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class ZMQSource(BaseSource):
-    def __init__(self, url="tcp://127.0.0.1:51423", **kwargs):
+    def __init__(self, url="tcp://0.0.0.0:51422", **kwargs):
         super().__init__(**kwargs)
         self.url = url
         self.ctx = zmq.asyncio.Context()
