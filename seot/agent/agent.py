@@ -74,7 +74,7 @@ class Agent:
         return await self._request("POST", "/job/{0}/reject".format(job_id))
 
     async def _heartbeat(self):
-        logger.info("Sending heartbeat to SEoT server...")
+        logger.debug("Sending heartbeat to SEoT server...")
 
         resp = await self._request("POST", "/heartbeat", data={
             "user_name": config.get("agent.user_name"),
@@ -126,7 +126,7 @@ class Agent:
             del self.jobs[job_id]
 
         else:
-            logger.info("Nothing to do")
+            logger.debug("Nothing to do")
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
