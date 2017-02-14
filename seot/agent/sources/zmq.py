@@ -20,6 +20,11 @@ class ZMQSource(BaseSource):
         self.sock.bind(self.url)
         logger.info("ZMQ listening at {0}".format(self.url))
 
+    async def cleanup(self):
+        self.sock.unbind(self.url)
+        self.sock.close()
+        logger.info("Closed ZMQ socket")
+
     async def _run(self):
         while True:
             data = await self.sock.recv()
