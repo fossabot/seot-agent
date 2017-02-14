@@ -157,7 +157,14 @@ def _discover_ip():
         port = 443
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((host, port))
+        s.settimeout(3.0)
+
+        try:
+            s.connect((host, port))
+        except:
+            logger.error("Could not connect to {0}:{1}".format(host, port))
+            sys.exit(1)
+
         return s.getsockname()[0]
 
 
