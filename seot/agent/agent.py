@@ -108,7 +108,13 @@ class Agent:
             del job["application_id"]
             del job["job_id"]
 
-            graph = GraphBuilder.from_obj(job)
+            try:
+                graph = GraphBuilder.from_obj(job)
+            except Exception as e:
+                logger.warning("Failed to build graph {0}".format(e))
+                await self._notify_job_stop(job_id)
+                return
+
             self.jobs[job_id] = graph
 
             await graph.start()
