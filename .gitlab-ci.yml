@@ -3,10 +3,6 @@ image: python:3
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
 
-before_script:
-  - pip install --upgrade pip setuptools wheel
-  - pip install -r requirements.txt
-
 cache:
   paths:
     - "$CI_PROJECT_DIR/pip-cache"
@@ -19,6 +15,7 @@ stages:
 check_style:
   stage: test
   script:
+    - pip install -r requirements.txt
     - flake8
 
 build_wheel:
@@ -28,3 +25,17 @@ build_wheel:
   artifacts:
     paths:
       - dist/
+  only:
+    - master
+
+build_docker:
+  stage: build
+  image: docker:git
+  services:
+    - docker:dind
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.ais.cmc.osaka-u.ac.jp
+    - docker build -t registry.ais.cmc.osaka-u.ac.jp/tis/seot-agent .
+    - docker push registry.ais.cmc.osaka-u.ac.jp/tis/seot-agent
+  only:
+    - master
