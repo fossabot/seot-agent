@@ -21,6 +21,7 @@ check_style:
 build_wheel:
   stage: build
   script:
+    - pip install -r requirements.txt
     - python setup.py bdist_wheel
   artifacts:
     paths:
