@@ -1,0 +1,5 @@
+.direnv
+.envrc
+.git
+.gitignore
+.gitlab-ci.yml
