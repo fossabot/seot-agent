@@ -1,5 +1,7 @@
+import argparse
 import getpass
 import logging
+import os
 import platform
 import shutil
 import socket
@@ -14,8 +16,12 @@ import yaml
 
 from . import meta
 
-CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
-STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
+if os.geteuid() != 0:
+    CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
+    STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
+else:
+    CONFIG_FILE_PATH = Path("/etc/seot/config.yml")
+    STATE_FILE_PATH = Path("/var/lib/seot/state.yml")
 
 logger = logging.getLogger(__name__)
 _config = {}
@@ -109,9 +115,26 @@ def _init_config():
     sys.exit(1)
 
 
+def _parse_cmd_args():
+    global CONFIG_FILE_PATH, STATE_FILE_PATH
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--conf", help="Configuration file path")
+    parser.add_argument("-s", "--state", help="State file path")
+    args = parser.parse_args()
+
+    if args.conf:
+        CONFIG_FILE_PATH = Path(args.conf)
+
+    if args.state:
+        STATE_FILE_PATH = Path(args.state)
+
+
 def load():
     """ Load configurations from files """
     global _config, _state
+
+    _parse_cmd_args()
 
     if CONFIG_FILE_PATH.exists():
         try:

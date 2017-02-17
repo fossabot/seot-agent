@@ -41,7 +41,7 @@ setup(
     },
     include_package_data=True,
     package_data={
-        "seot.agent": ["conf/config.yml.sample", "conf/log.ini"]
+        "seot.agent": ["conf/config.yml.sample"]
     },
     author="Keichi Takahashi",
     install_requires=install_requires,
