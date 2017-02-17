@@ -1,5 +1,6 @@
 import getpass
 import logging
+import os
 import platform
 import shutil
 import socket
@@ -14,8 +15,12 @@ import yaml
 
 from . import meta
 
-CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
-STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
+if os.geteuid() != 0:
+    CONFIG_FILE_PATH = Path.home() / ".config/seot/config.yml"
+    STATE_FILE_PATH = Path.home() / ".local/share/seot/state.yml"
+else:
+    CONFIG_FILE_PATH = Path("/etc/seot/config.yml")
+    STATE_FILE_PATH = Path("/var/lib/seot/state.yml")
 
 logger = logging.getLogger(__name__)
 _config = {}
