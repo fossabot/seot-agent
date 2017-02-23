@@ -1,3 +1,4 @@
+import argparse
 import logging
 import logging.config
 
@@ -51,15 +52,35 @@ def log_quit_message():
     logger.info(farewell)
 
 
-def configure_logging():
+def parse_cmd_args():
+    global CONFIG_FILE_PATH, STATE_FILE_PATH
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", help="Configuration file path")
+    parser.add_argument("-s", "--state", help="State file path")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose"
+                        " log output")
+    parser.set_defaults(feature=False)
+
+    args = parser.parse_args()
+
+    return args
+
+
+def configure_logging(verbose=False):
     """ Configure logging and enable colorlog """
+
+    if verbose:
+        log_level = "DEBUG"
+    else:
+        log_level = "INFO"
 
     logging.config.dictConfig({
         "version": 1,
         "formatters": {
             "color": {
                 "()": "colorlog.ColoredFormatter",
-                "format": "%(log_color)s[%(levelname)s] %(reset)s[%(name)s]:"
+                "format": "%(log_color)s[%(levelname)s]%(reset)s [%(name)s]: "
                           "%(message)s",
                 "datefmt": "%H:%M:%S"
             }
@@ -72,7 +93,7 @@ def configure_logging():
             }
         },
         "root": {
-            "level": "INFO",
+            "level": log_level,
             "handlers": ["default"],
         },
         "disable_existing_loggers": False

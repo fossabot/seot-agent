@@ -2,8 +2,8 @@ import logging
 
 from . import config, meta
 from .agent import Agent
-from .util import configure_logging, log_startup_message
-from .util import log_quit_message
+from .util import configure_logging, log_quit_message, log_startup_message
+from .util import parse_cmd_args
 
 
 __version__ = meta.__version__
@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    args = parse_cmd_args()
+
     # Initialize logging
-    configure_logging()
+    configure_logging(args.verbose)
 
     # Load configs
-    config.load()
+    config.load(args.config, args.state)
 
     # Discover platform information
     config.discover_facts()
