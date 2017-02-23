@@ -1,4 +1,3 @@
-import argparse
 import getpass
 import logging
 import os
@@ -115,26 +114,14 @@ def _init_config():
     sys.exit(1)
 
 
-def _parse_cmd_args():
-    global CONFIG_FILE_PATH, STATE_FILE_PATH
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--conf", help="Configuration file path")
-    parser.add_argument("-s", "--state", help="State file path")
-    args = parser.parse_args()
-
-    if args.conf:
-        CONFIG_FILE_PATH = Path(args.conf)
-
-    if args.state:
-        STATE_FILE_PATH = Path(args.state)
-
-
-def load():
+def load(conf_path=None, state_path=None):
     """ Load configurations from files """
-    global _config, _state
+    global _config, _state, CONFIG_FILE_PATH, STATE_FILE_PATH
 
-    _parse_cmd_args()
+    if conf_path:
+        CONFIG_FILE_PATH = Path(conf_path)
+    if state_path:
+        STATE_FILE_PATH = Path(state_path)
 
     if CONFIG_FILE_PATH.exists():
         try:
