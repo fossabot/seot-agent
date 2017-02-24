@@ -24,3 +24,15 @@ class SenseHatSource(BaseSource):
             await self._emit(data)
 
             await asyncio.sleep(self.interval, loop=self.loop)
+
+    @classmethod
+    def can_run(cls):
+        try:
+            sense = SenseHat()
+            sense.get_temperature()
+            sense.get_humidity()
+            sense.get_pressure()
+        except:
+            return False
+
+        return True

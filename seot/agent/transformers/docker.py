@@ -154,3 +154,13 @@ class DockerTransformer(BaseTransformer):
             unpacker.feed(buf)
             for msg in unpacker:
                 await self._emit(msg)
+
+    @classmethod
+    def can_run(cls):
+        try:
+            docker_client = docker.DockerClient()
+            ok = docker_client.ping()
+        except:
+            return False
+
+        return ok

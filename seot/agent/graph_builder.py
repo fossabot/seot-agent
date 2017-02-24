@@ -1,19 +1,23 @@
-import importlib
 import json
-import logging
+from importlib import import_module
+from inspect import getmembers, isclass
+from logging import getLogger
+from pkgutil import walk_packages
 
 from schema import Optional, Schema
+
+import seot.agent
 
 import yaml
 
 from . import config
 from .dataflow import Graph, Node
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class GraphBuilder:
-    _REGISTERED_NODES = None
+    REGISTERED_NODES = None
 
     _GRAPH_DEF_SCHEMA = Schema({
         "nodes": [{
@@ -36,20 +40,20 @@ class GraphBuilder:
 
     @classmethod
     def from_obj(cls, obj, **kwargs):
-        if cls._REGISTERED_NODES is None:
-            cls._load_node_classes()
+        if cls.REGISTERED_NODES is None:
+            cls.load_node_classes()
 
         graph_def = cls._GRAPH_DEF_SCHEMA.validate(obj)
 
         nodes = {}
         for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
-            if cls_name not in cls._REGISTERED_NODES:
+            if cls_name not in cls.REGISTERED_NODES:
                 raise RuntimeError("Node type {0} is not loaded".format(
                     cls_name
                 ))
 
-            node_cls = cls._REGISTERED_NODES[cls_name]
+            node_cls = cls.REGISTERED_NODES[cls_name]
             node_args = node_def.get("args", {})
             node_args["name"] = node_def["name"]
             if "loop" in kwargs:
@@ -74,35 +78,35 @@ class GraphBuilder:
         return Graph(*sources, **kwargs)
 
     @classmethod
-    def _load_node_classes(cls):
-        cls._REGISTERED_NODES = {}
+    def load_node_classes(cls):
+        cls.REGISTERED_NODES = {}
 
-        for node in config.get("nodes"):
-            node_cls = cls._try_load_node(node["module"], node["class"])
+        blacklist = set(config.get("node_blacklist") or [])
 
-            if node_cls is None:
+        root_pkg = seot.agent
+        pkgs = walk_packages(root_pkg.__path__, root_pkg.__name__ + ".")
+
+        # Walk over all submodules of seot.agent
+        for importer, mod_name, is_pkg in pkgs:
+            try:
+                mod = import_module(mod_name)
+            except:
                 continue
 
-            cls._REGISTERED_NODES[node["class"]] = node_cls
+            def is_node(node_cls):
+                # check if c is a subclass of Node
+                if isclass(node_cls) and issubclass(node_cls, Node):
+                    # check if c can run on this platform
+                    if node_cls != Node and node_cls.can_run():
+                        return True
 
-    @classmethod
-    def _try_load_node(cls, mod_name, cls_name):
-        # First, import the module containing node
-        try:
-            importlib.import_module(mod_name)
-        except ImportError as e:
-            logger.warning("Failed to load module {0}: {1}".format(
-                mod_name, e
-            ))
-            return None
+                return False
 
-        # Now class node should be visible as a subclass of Node
-        for node_cls in Node.all_subclasses():
-            if node_cls.__name__ == cls_name:
-                logger.info("Loaded node type {0} from module {1}".format(
+            for cls_name, node_cls in getmembers(mod, is_node):
+                if cls_name in blacklist:
+                    continue
+
+                logger.debug("Loaded node type {0} from module {1}".format(
                     cls_name, mod_name
                 ))
-                return node_cls
-
-        logger.warning("Could not find class {0}".format(cls_name))
-        return None
+                cls.REGISTERED_NODES[cls_name] = node_cls

@@ -38,10 +38,7 @@ _CONFIG_SCHEMA = Schema({
         Optional("heartbeat_interval", default=60): int,
         Optional("base_url", default="http://localhost:8888/api"): str
     },
-    Optional("nodes"): [{
-        "module": str,
-        "class": str
-    }]
+    Optional("node_blacklist"): [str]
 })
 
 _STATE_SCHEMA = Schema({

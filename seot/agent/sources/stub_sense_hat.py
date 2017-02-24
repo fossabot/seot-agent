@@ -33,3 +33,7 @@ class StubSenseHatSource(BaseSource):
             await self._emit(data)
 
             await asyncio.sleep(self.interval, loop=self.loop)
+
+    @classmethod
+    def can_run(cls):
+        return True

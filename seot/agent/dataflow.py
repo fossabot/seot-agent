@@ -74,11 +74,6 @@ class Node(ABC):
 
         return self._task
 
-    @classmethod
-    def all_subclasses(cls):
-        return cls.__subclasses__() + [g for s in cls.__subclasses__()
-                                       for g in s.all_subclasses()]
-
     async def startup(self):
         """
         Perform initializations required before starting this node.
@@ -96,6 +91,13 @@ class Node(ABC):
         Return a list of dataflow nodes connected to this node.
         """
         return []
+
+    @classmethod
+    def can_run(cls):
+        """
+        Return if this node is runnable on the current platform
+        """
+        return False
 
 
 class Graph:

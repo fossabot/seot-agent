@@ -6,26 +6,5 @@ agent:
     latitude: 135.5258597
 
 cpp:
-  base_url: https://seot-staging.mars.ais.cmc.osaka-u.ac.jp/api
-
-nodes:
-  - module: seot.agent.sinks.fs
-    class: FileSystemSink
-  - module: seot.agent.sinks.zmq
-    class: ZMQSink
-  - module: seot.agent.sinks.mongodb
-    class: MongoDBSink
-  - module: seot.agent.sources.zmq
-    class: ZMQSource
-  - module: seot.agent.sinks
-    class: DebugSink
-  - module: seot.agent.sources
-    class: ConstSource
-  - module: seot.agent.sources.sense_hat
-    class: SenseHatSource
-  - module: seot.agent.sources.stub_sense_hat
-    class: StubSenseHatSource
-  - module: seot.agent.sources.pi_camera
-    class: PiCameraSource
-  - module: seot.agent.transformers.docker
-    class: DockerTransformer
+  base_url: https://seot-dev.mars.ais.cmc.osaka-u.ac.jp/api
+  heartbeat_interval: 10
