@@ -10,6 +10,7 @@ import seot.agent
 
 import yaml
 
+from . import config
 from .dataflow import Graph, Node
 
 logger = getLogger(__name__)
@@ -80,6 +81,8 @@ class GraphBuilder:
     def load_node_classes(cls):
         cls.REGISTERED_NODES = {}
 
+        blacklist = set(config.get("node_blacklist") or [])
+
         root_pkg = seot.agent
         pkgs = walk_packages(root_pkg.__path__, root_pkg.__name__ + ".")
 
@@ -100,6 +103,9 @@ class GraphBuilder:
                 return False
 
             for cls_name, node_cls in getmembers(mod, is_node):
+                if cls_name in blacklist:
+                    continue
+
                 logger.debug("Loaded node type {0} from module {1}".format(
                     cls_name, mod_name
                 ))
