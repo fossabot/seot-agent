@@ -1,4 +1,4 @@
-from ..sinks import BaseSource
+from . import BaseSource
 
 
 class NullSource(BaseSource):
