@@ -6,7 +6,7 @@ async-timeout==1.1.0
 cchardet==1.1.2
 chardet==2.3.0
 colorlog==2.10.0
-docker==2.0.2
+docker==2.1.0
 docker-pycreds==0.2.1
 envoy==0.0.3
 flake8==3.3.0

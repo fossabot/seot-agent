@@ -48,13 +48,19 @@ class DockerTransformer(BaseTransformer):
         self._dump_logs_task.cancel()
         await asyncio.wait([self._read_task, self._dump_logs_task])
 
+        self.writer.close()
+
         logger.info("Stopping and removing docker container {0}".format(
             self.container.short_id))
         await self.loop.run_in_executor(None, self._stop_container)
+        logger.info("Stopped and removed docker container {0}".format(
+            self.container.short_id))
 
         logger.info("Removing docker image {0}:{1}".format(
             self.repo, self.tag))
         await self.loop.run_in_executor(None, self._remove_image)
+        logger.info("Removed docker image {0}:{1}".format(
+            self.repo, self.tag))
 
     async def _process(self, data):
         self.writer.write(encode(data))
@@ -77,16 +83,20 @@ class DockerTransformer(BaseTransformer):
     def _pull_image(self):
         logger.info("Pulling docker image {0}:{1}".format(self.repo, self.tag))
         self.docker_client.images.pull(self.repo, tag=self.tag)
-        logger.info("Pulled docker image")
+        logger.info("Pulled docker image {0}:{1}".format(self.repo, self.tag))
 
     def _remove_image(self):
         with suppress(docker.errors.APIError):
             self.docker_client.images.remove(self.repo)
 
     def _start_container(self):
-        logger.info("Launching docker container")
+        logger.info("Launching docker container from image {0}:{1}".format(
+            self.repo, self.tag
+        ))
+        # Enable auto_remove option when we have switched to docker API
+        # version 1.25
         self.container = self.docker_client.containers.run(
-            self.repo,
+            "{0}:{1}".format(self.repo, self.tag),
             command=self.cmd,
             ports={CONTAINER_PRIVATE_PORT: (HOST_LOOPBACK_ADDRESS, None)},
             detach=True
@@ -95,21 +105,29 @@ class DockerTransformer(BaseTransformer):
             self.container.short_id))
 
     async def _connect_to_container(self):
+        # TODO Dirty hack... without this wait, we fail to establish with
+        # the container on some platforms.
+        await asyncio.sleep(1)
+
         port_mapping = self.docker_api_client.port(
             self.container.id,
             private_port=CONTAINER_PRIVATE_PORT
         )
-        host_port = port_mapping[0]["HostPort"]
+        self.host_port = port_mapping[0]["HostPort"]
 
         logger.debug("Connecting to port {0}/tcp of container {1}".format(
-            host_port, self.container.short_id
+            self.host_port, self.container.short_id
         ))
 
         (self.reader, self.writer) = await asyncio.open_connection(
             host=HOST_LOOPBACK_ADDRESS,
-            port=host_port,
+            port=int(self.host_port),
             loop=self.loop
         )
+
+        logger.debug("Connected to port {0}/tcp of container {1}".format(
+            self.host_port, self.container.short_id
+        ))
 
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
@@ -128,7 +146,8 @@ class DockerTransformer(BaseTransformer):
 
         while True:
             buf = await self.reader.read(1024)
-            # We have disconnected
+
+            # TODO What should we do on disconection?
             if not buf:
                 break
 
