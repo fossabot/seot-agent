@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from .. import config
-from ..dataflow import Node
+from ..node import Node
 from ..sinks import BaseSink
 
 
