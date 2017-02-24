@@ -74,11 +74,6 @@ class Node(ABC):
 
         return self._task
 
-    @classmethod
-    def all_subclasses(cls):
-        return cls.__subclasses__() + [g for s in cls.__subclasses__()
-                                       for g in s.all_subclasses()]
-
     async def startup(self):
         """
         Perform initializations required before starting this node.
