@@ -157,4 +157,10 @@ class DockerTransformer(BaseTransformer):
 
     @classmethod
     def can_run(cls):
-        return True
+        try:
+            docker_client = docker.DockerClient()
+            ok = docker_client.ping()
+        except:
+            return False
+
+        return ok
