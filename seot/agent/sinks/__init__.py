@@ -1,7 +1,7 @@
 import asyncio
 from abc import abstractmethod
 
-from ..dataflow import Node
+from ..node import Node
 
 
 class BaseSink(Node):

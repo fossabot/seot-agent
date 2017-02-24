@@ -11,7 +11,8 @@ import seot.agent
 import yaml
 
 from . import config
-from .dataflow import Graph, Node
+from .graph import Graph
+from .node import Node
 
 logger = getLogger(__name__)
 
