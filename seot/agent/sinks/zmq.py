@@ -21,7 +21,6 @@ class ZMQSink(BaseSink):
         self.sock.setsockopt(zmq.LINGER, self.linger)
         logger.info("Connecting to ZMQ peer at {0}".format(self.url))
         self.sock.connect(self.url)
-        logger.info("Connected to ZMQ peer at {0}".format(self.url))
 
     async def cleanup(self):
         self.sock.close()
