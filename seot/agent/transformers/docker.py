@@ -1,18 +1,20 @@
 import asyncio
-import shutil
-import tempfile
 from contextlib import suppress
 from logging import getLogger
-from pathlib import Path
 
 import docker
 
 import msgpack
 
 from . import BaseTransformer
+from ..dpp import encode
 
 
 logger = getLogger(__name__)
+
+
+CONTAINER_PRIVATE_PORT = "11423/tcp"
+HOST_LOOPBACK_ADDRESS = "127.0.0.1"
 
 
 class DockerTransformer(BaseTransformer):
@@ -21,47 +23,42 @@ class DockerTransformer(BaseTransformer):
         self.repo = repo
         self.tag = tag
         self.cmd = cmd
-        self.docker_client = docker.from_env()
-        self.clients = {}
+        self.docker_client = docker.DockerClient()
+        self.docker_api_client = docker.APIClient()
 
     async def startup(self):
         self._health_check()
 
-        await self._start_unix_server()
-
-        logger.info("Pulling docker image {0}:{1}".format(self.repo, self.tag))
         await self.loop.run_in_executor(None, self._pull_image)
-        logger.info("Pulled docker image")
 
-        logger.info("Launching docker container")
         self._start_container()
-        logger.info("Launched docker container {0}".format(
-            self.container.short_id))
 
         self._dump_logs_task = asyncio.ensure_future(
             self.loop.run_in_executor(None, self._dump_logs), loop=self.loop
         )
 
-    async def cleanup(self):
-        self.unix_server.close()
+        await self._connect_to_container()
 
+        self._read_task = asyncio.ensure_future(
+            self._read_from_container(), loop=self.loop
+        )
+
+    async def cleanup(self):
+        self._read_task.cancel()
         self._dump_logs_task.cancel()
-        await asyncio.wait([self._dump_logs_task])
+        await asyncio.wait([self._read_task, self._dump_logs_task])
 
         logger.info("Stopping and removing docker container {0}".format(
             self.container.short_id))
         await self.loop.run_in_executor(None, self._stop_container)
-
-        shutil.rmtree(str(self.tmp_dir_path))
 
         logger.info("Removing docker image {0}:{1}".format(
             self.repo, self.tag))
         await self.loop.run_in_executor(None, self._remove_image)
 
     async def _process(self, data):
-        for (reader, writer) in self.clients.values():
-            writer.write(msgpack.packb(data, use_bin_type=True))
-            await writer.drain()
+        self.writer.write(encode(data))
+        await self.writer.drain()
 
     def _health_check(self):
         ok = False
@@ -78,22 +75,42 @@ class DockerTransformer(BaseTransformer):
         logger.info("Docker API version: {0}".format(ver_info["ApiVersion"]))
 
     def _pull_image(self):
+        logger.info("Pulling docker image {0}:{1}".format(self.repo, self.tag))
         self.docker_client.images.pull(self.repo, tag=self.tag)
+        logger.info("Pulled docker image")
 
     def _remove_image(self):
         with suppress(docker.errors.APIError):
             self.docker_client.images.remove(self.repo)
 
     def _start_container(self):
+        logger.info("Launching docker container")
         self.container = self.docker_client.containers.run(
             self.repo,
             command=self.cmd,
-            network_disabled=True,
-            volumes={
-                str(self.sock_path): {"bind": "/tmp/seot.sock", "mode": "rw"}
-            },
+            ports={CONTAINER_PRIVATE_PORT: (HOST_LOOPBACK_ADDRESS, None)},
             detach=True
         )
+        logger.info("Launched docker container {0}".format(
+            self.container.short_id))
+
+    async def _connect_to_container(self):
+        port_mapping = self.docker_api_client.port(
+            self.container.id,
+            private_port=CONTAINER_PRIVATE_PORT
+        )
+        host_port = port_mapping[0]["HostPort"]
+
+        logger.info("Connecting to port {0}/tcp of container {1}".format(
+            host_port, self.container.short_id
+        ))
+        # TODO Wait and retry if container is not ready yet
+        (self.reader, self.writer) = await asyncio.open_connection(
+            host=HOST_LOOPBACK_ADDRESS,
+            port=host_port,
+            loop=self.loop
+        )
+        logger.info("Connected to docker container")
 
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
@@ -101,39 +118,18 @@ class DockerTransformer(BaseTransformer):
             logger.info(line.decode("utf-8").strip())
 
     def _stop_container(self):
-        if self.container.status in ["running", "created"]:
+        with suppress(docker.errors.APIError):
             self.container.kill()
+
+        self.docker_api_client.wait(self.container.id)
         self.container.remove()
 
-    async def _start_unix_server(self):
-        self.tmp_dir_path = Path(tempfile.mkdtemp(prefix="seot-", dir="/tmp"))
-        self.sock_path = self.tmp_dir_path / "seot.sock"
-
-        self.unix_server = await asyncio.start_unix_server(
-            self._accept_unix_client,
-            path=str(self.sock_path),
-            loop=self.loop
-        )
-
-    async def _accept_unix_client(self, reader, writer):
-        logger.info("A docker client has connected")
-
-        task = asyncio.ensure_future(self._handle_unix_client(reader, writer),
-                                     loop=self.loop)
-        self.clients[task] = (reader, writer)
-
-        def client_done(task):
-            logger.info("A docker client has disconnected")
-            del self.clients[task]
-
-        task.add_done_callback(client_done)
-
-    async def _handle_unix_client(self, reader, writer):
+    async def _read_from_container(self):
         unpacker = msgpack.Unpacker(encoding="utf-8")
 
         while True:
-            buf = await reader.read(1024)
-            # Client has disconnected
+            buf = await self.reader.read(1024)
+            # We have disconnected
             if not buf:
                 break
 
