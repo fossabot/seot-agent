@@ -114,7 +114,7 @@ class DockerTransformer(BaseTransformer):
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
                                         follow=True):
-            logger.info(line.decode("utf-8").strip())
+            logger.debug(line.decode("utf-8").strip())
 
     def _stop_container(self):
         with suppress(docker.errors.APIError):
