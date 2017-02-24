@@ -60,7 +60,7 @@ class DockerTransformer(BaseTransformer):
 
     async def _process(self, data):
         for (reader, writer) in self.clients.values():
-            writer.write(msgpack.packb(data))
+            writer.write(msgpack.packb(data, use_bin_type=True))
             await writer.drain()
 
     def _health_check(self):
