@@ -35,4 +35,10 @@ class PiCameraSource(BaseSource):
 
     @classmethod
     def can_run(cls):
+        try:
+            camera = PiCamera()
+            camera.close()
+        except:
+            return False
+
         return True
