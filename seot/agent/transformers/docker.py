@@ -71,8 +71,8 @@ class DockerTransformer(BaseTransformer):
             raise RuntimeError("Failed to connect to docker server")
 
         ver_info = self.docker_client.version()
-        logger.info("Docker server version: {0}".format(ver_info["Version"]))
-        logger.info("Docker API version: {0}".format(ver_info["ApiVersion"]))
+        logger.debug("Docker server version: {0}".format(ver_info["Version"]))
+        logger.debug("Docker API version: {0}".format(ver_info["ApiVersion"]))
 
     def _pull_image(self):
         logger.info("Pulling docker image {0}:{1}".format(self.repo, self.tag))
@@ -101,16 +101,15 @@ class DockerTransformer(BaseTransformer):
         )
         host_port = port_mapping[0]["HostPort"]
 
-        logger.info("Connecting to port {0}/tcp of container {1}".format(
+        logger.debug("Connecting to port {0}/tcp of container {1}".format(
             host_port, self.container.short_id
         ))
-        # TODO Wait and retry if container is not ready yet
+
         (self.reader, self.writer) = await asyncio.open_connection(
             host=HOST_LOOPBACK_ADDRESS,
             port=host_port,
             loop=self.loop
         )
-        logger.info("Connected to docker container")
 
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
