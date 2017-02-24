@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 
 
 class GraphBuilder:
-    _REGISTERED_NODES = None
+    REGISTERED_NODES = None
 
     _GRAPH_DEF_SCHEMA = Schema({
         "nodes": [{
@@ -39,20 +39,20 @@ class GraphBuilder:
 
     @classmethod
     def from_obj(cls, obj, **kwargs):
-        if cls._REGISTERED_NODES is None:
-            cls._load_node_classes()
+        if cls.REGISTERED_NODES is None:
+            cls.load_node_classes()
 
         graph_def = cls._GRAPH_DEF_SCHEMA.validate(obj)
 
         nodes = {}
         for node_def in graph_def["nodes"]:
             cls_name = node_def["type"]
-            if cls_name not in cls._REGISTERED_NODES:
+            if cls_name not in cls.REGISTERED_NODES:
                 raise RuntimeError("Node type {0} is not loaded".format(
                     cls_name
                 ))
 
-            node_cls = cls._REGISTERED_NODES[cls_name]
+            node_cls = cls.REGISTERED_NODES[cls_name]
             node_args = node_def.get("args", {})
             node_args["name"] = node_def["name"]
             if "loop" in kwargs:
@@ -77,8 +77,8 @@ class GraphBuilder:
         return Graph(*sources, **kwargs)
 
     @classmethod
-    def _load_node_classes(cls):
-        cls._REGISTERED_NODES = {}
+    def load_node_classes(cls):
+        cls.REGISTERED_NODES = {}
 
         root_pkg = seot.agent
         pkgs = walk_packages(root_pkg.__path__, root_pkg.__name__ + ".")
@@ -103,4 +103,4 @@ class GraphBuilder:
                 logger.debug("Loaded node type {0} from module {1}".format(
                     cls_name, mod_name
                 ))
-                cls._REGISTERED_NODES[cls_name] = node_cls
+                cls.REGISTERED_NODES[cls_name] = node_cls
