@@ -29,3 +29,7 @@ class ZMQSource(BaseSource):
         while True:
             data = await self.sock.recv()
             await self._emit(decode(data))
+
+    @classmethod
+    def can_run(cls):
+        return True

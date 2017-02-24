@@ -36,3 +36,7 @@ class FileSystemSink(BaseSink):
 
         async with aiofiles.open(str(path), mode="wb") as f:
             await f.write(data)
+
+    @classmethod
+    def can_run(cls):
+        return True

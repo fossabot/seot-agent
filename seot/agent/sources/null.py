@@ -7,3 +7,7 @@ class NullSource(BaseSource):
 
     async def _run(self):
         pass
+
+    @classmethod
+    def can_run(cls):
+        return True

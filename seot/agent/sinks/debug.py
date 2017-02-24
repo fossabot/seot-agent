@@ -32,3 +32,7 @@ class DebugSink(BaseSink):
                                   formatters.TerminalFormatter())
         logger.log(self.level, "{0} received:\n{1}".format(
             self.name, colorful_json.strip()))
+
+    @classmethod
+    def can_run(cls):
+        return True

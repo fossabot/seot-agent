@@ -7,3 +7,7 @@ class NullSink(BaseSink):
 
     async def _process(self, data):
         pass
+
+    @classmethod
+    def can_run(cls):
+        return True

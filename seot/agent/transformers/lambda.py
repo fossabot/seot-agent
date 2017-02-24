@@ -8,3 +8,7 @@ class LambdaTransformer(SimpleTransformer):
 
     async def _process(self, data):
         return await self.func(data)
+
+    @classmethod
+    def can_run(cls):
+        return True

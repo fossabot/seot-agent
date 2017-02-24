@@ -154,3 +154,7 @@ class DockerTransformer(BaseTransformer):
             unpacker.feed(buf)
             for msg in unpacker:
                 await self._emit(msg)
+
+    @classmethod
+    def can_run(cls):
+        return True

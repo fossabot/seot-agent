@@ -31,3 +31,7 @@ class ZMQSink(BaseSink):
 
     async def _process(self, msg):
         self.sock.send(encode(msg))
+
+    @classmethod
+    def can_run(cls):
+        return True

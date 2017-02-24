@@ -13,3 +13,7 @@ class ConstSource(BaseSource):
         while True:
             await self._emit(self.const)
             await asyncio.sleep(self.interval, loop=self.loop)
+
+    @classmethod
+    def can_run(cls):
+        return True

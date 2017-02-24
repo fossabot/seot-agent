@@ -97,6 +97,13 @@ class Node(ABC):
         """
         return []
 
+    @classmethod
+    def can_run(cls):
+        """
+        Return if this node is runnable on the current platform
+        """
+        return False
+
 
 class Graph:
     """

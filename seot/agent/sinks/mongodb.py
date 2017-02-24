@@ -51,3 +51,7 @@ class MongoDBSink(BaseSink):
     async def cleanup(self):
         logger.info("Disconnecting from MongoDB")
         self.client.close()
+
+    @classmethod
+    def can_run(cls):
+        return True
