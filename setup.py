@@ -35,7 +35,6 @@ setup(
     entry_points={
         "console_scripts": [
             "seot-agent = seot.agent.__init__:main",
-            "seot-dptool = seot.agent.dptool:main",
             "seot-debugtool = seot.agent.debugtool:main"
         ],
     },
