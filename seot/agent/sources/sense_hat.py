@@ -27,4 +27,12 @@ class SenseHatSource(BaseSource):
 
     @classmethod
     def can_run(cls):
+        try:
+            sense = SenseHat()
+            sense.get_temperature()
+            sense.get_humidity()
+            sense.get_pressure()
+        except:
+            return False
+
         return True
