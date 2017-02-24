@@ -82,7 +82,7 @@ class Agent:
                 "agent_id": config.get_state("agent_id"),
                 "longitude": config.get("agent.coordinate.longitude"),
                 "latitude": config.get("agent.coordinate.latitude"),
-                "nodes": [node["class"] for node in config.get("nodes")],
+                "nodes": list(GraphBuilder.REGISTERED_NODES.keys()),
                 "facts": config.get("facts")
             })
         except:
