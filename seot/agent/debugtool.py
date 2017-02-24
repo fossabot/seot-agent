@@ -13,7 +13,7 @@ logger = getLogger(__name__)
 
 def main():
     # Initialize logging
-    configure_logging()
+    configure_logging(verbose=True)
 
     # Load configs
     config.load()
