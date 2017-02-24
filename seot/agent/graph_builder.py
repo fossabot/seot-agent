@@ -87,7 +87,7 @@ class GraphBuilder:
         for importer, mod_name, is_pkg in pkgs:
             try:
                 mod = import_module(mod_name)
-            except ImportError:
+            except:
                 continue
 
             def is_node(node_cls):
