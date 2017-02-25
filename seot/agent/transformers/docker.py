@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import suppress
 from logging import getLogger
+from pathlib import Path
 
 import docker
 
@@ -13,7 +14,7 @@ from ..dpp import encode
 logger = getLogger(__name__)
 
 
-CONTAINER_PRIVATE_PORT = "11423/tcp"
+CONTAINER_PRIVATE_PORT = 11423
 HOST_LOOPBACK_ADDRESS = "127.0.0.1"
 
 
@@ -104,30 +105,35 @@ class DockerTransformer(BaseTransformer):
         logger.info("Launched docker container {0}".format(
             self.container.short_id))
 
+    def _inside_docker(self):
+        return Path("/.dockerenv").is_file()
+
     async def _connect_to_container(self):
         # TODO Dirty hack... without this wait, we fail to establish with
         # the container on some platforms.
         await asyncio.sleep(1)
 
-        port_mapping = self.docker_api_client.port(
-            self.container.id,
-            private_port=CONTAINER_PRIVATE_PORT
-        )
-        self.host_port = port_mapping[0]["HostPort"]
+        if self._inside_docker():
+            info = self.docker_api_client.inspect_container(self.container.id)
+            address = info["NetworkSettings"]["IPAddress"]
+            host_port = CONTAINER_PRIVATE_PORT
+        else:
+            address = HOST_LOOPBACK_ADDRESS
+            port_mapping = self.docker_api_client.port(
+                self.container.id,
+                private_port=str(CONTAINER_PRIVATE_PORT)+"/tcp"
+            )
+            host_port = port_mapping[0]["HostPort"]
 
-        logger.debug("Connecting to port {0}/tcp of container {1}".format(
-            self.host_port, self.container.short_id
-        ))
+        logger.debug("Connecting to {0}:{1}".format(address, host_port))
 
         (self.reader, self.writer) = await asyncio.open_connection(
-            host=HOST_LOOPBACK_ADDRESS,
-            port=int(self.host_port),
+            host=address,
+            port=int(host_port),
             loop=self.loop
         )
 
-        logger.debug("Connected to port {0}/tcp of container {1}".format(
-            self.host_port, self.container.short_id
-        ))
+        logger.debug("Connected to {0}:{1}".format(address, host_port))
 
     def _dump_logs(self):
         for line in self.container.logs(stdout=True, stderr=True, stream=True,
