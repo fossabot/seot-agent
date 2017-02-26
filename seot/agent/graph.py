@@ -136,13 +136,21 @@ class Graph:
                 for f in pending:
                     f.cancel()
 
-                logger.error("Graph failed to start: {0}".format(e))
+                logger.error("Failed to initialize a node: {0}".format(e))
                 raise RuntimeError("Dataflow graph failed to start")
 
     async def cleanup(self):
         """
         Perform cleanups required before starting this graph.
         """
-        # Currently we just ignore failed cleanup tasks
-        await asyncio.wait([node.cleanup() for node in self.nodes()],
-                           loop=self.loop)
+        # Call node.cleanup() to initializate each node
+        done, pending = await asyncio.wait(
+            [node.cleanup() for node in self.nodes()],
+            loop=self.loop
+        )
+
+        for future in done:
+            try:
+                future.result()
+            except Exception as e:
+                logger.warning("Failed to cleanup a node: {0}".format(e))
