@@ -12,7 +12,7 @@ nodes:
 - name: docker
   type: DockerTransformer
   args:
-    repo: keichi/seot-test
+    repo: seot/test
   to:
   - debug
 - name: debug
