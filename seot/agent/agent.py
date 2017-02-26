@@ -177,6 +177,7 @@ class Agent:
 
                 logger.info("Terminating job {0}".format(job_id))
                 self.loop.run_until_complete(graph.stop())
+                self.loop.run_until_complete(graph.cleanup())
                 self.loop.run_until_complete(self._notify_job_stop(job_id))
 
         self.loop.close()
