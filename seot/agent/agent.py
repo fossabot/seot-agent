@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import logging
 
@@ -128,7 +129,12 @@ class Agent:
 
         self.jobs[job_id] = graph
 
-        await graph.start()
+        async def _cleanup(graph):
+            await graph.cleanup()
+            await self._notify_job_stop(job_id)
+            self.jobs.pop(job_id, None)
+
+        await graph.start(done_cb=_cleanup)
 
     async def _stop_job(self, job_id):
         graph = self.jobs.get(job_id)
@@ -139,11 +145,6 @@ class Agent:
         if graph.running():
             logger.info("Terminating job {0}".format(job_id))
             await graph.stop()
-            await graph.cleanup()
-
-        await self._notify_job_stop(job_id)
-
-        del self.jobs[job_id]
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")
@@ -173,13 +174,11 @@ class Agent:
 
             self.stop()
 
-            for job_id, graph in self.jobs.items():
+            for job_id, graph in copy.copy(self.jobs).items():
                 if not graph.running():
                     continue
 
                 logger.info("Terminating job {0}".format(job_id))
                 self.loop.run_until_complete(graph.stop())
-                self.loop.run_until_complete(graph.cleanup())
-                self.loop.run_until_complete(self._notify_job_stop(job_id))
 
         self.loop.close()

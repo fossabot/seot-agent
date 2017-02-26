@@ -32,6 +32,8 @@ class Graph:
         if self.loop is None:
             self.loop = asyncio.get_event_loop()
 
+        self._task = None
+
     def nodes(self):
         """
         Returns a list of all dataflow nodes
@@ -52,30 +54,30 @@ class Graph:
         permanent = set([])
         result = deque([])
 
-        def walk(node):
+        def _walk(node):
             if node in pending:
                 raise RuntimeError("Dataflow graph contains cycle")
             elif node not in permanent:
                 pending.add(node)
                 for next_node in node.next_nodes():
-                    walk(next_node)
+                    _walk(next_node)
                 result.appendleft(node)
                 pending.discard(node)
                 permanent.add(node)
 
         for node in sources:
-            walk(node)
+            _walk(node)
 
         return list(result)
 
-    async def start(self):
+    async def start(self, done_cb=None):
         """
         Start this dataflow graph.
         """
         if self.running():
-            raise RuntimeError("Graph is already running")
+            logger.error("Graph is already running")
 
-        async def run():
+        async def _run():
             # Now we actually launch each node by calling .start()
             done, pending = await asyncio.wait(
                 [node.start() for node in self.nodes()],
@@ -97,25 +99,31 @@ class Graph:
                         f.cancel()
 
                     logger.error("Graph crashed: {0}".format(e))
-                    raise RuntimeError("Dataflow graph crashed")
 
-        asyncio.ensure_future(run(), loop=self.loop)
+            if done_cb:
+                await done_cb(self)
+
+        self._task = asyncio.ensure_future(_run(), loop=self.loop)
 
     async def stop(self):
         """
         Stop this dataflow graph.
         """
         if not self.running():
-            raise RuntimeError("Graph is not running")
+            logger.error("Graph is not running")
 
-        # Request nodes to stop and wait until them to actually stop
         running_nodes = [node for node in self.nodes() if node.running()]
         if not running_nodes:
             return
 
+        # Request nodes to stop and wait until them to actually stop
         with suppress(asyncio.CancelledError):
             await asyncio.wait([node.stop() for node in self.nodes()],
                                loop=self.loop)
+
+        # Now all nodes has stopped, but we need to wait until done_cb
+        # finishes
+        await asyncio.wait([self._task], loop=self.loop)
 
     async def startup(self):
         """
