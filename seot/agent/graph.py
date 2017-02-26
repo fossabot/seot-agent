@@ -121,7 +121,7 @@ class Graph:
             await asyncio.wait([node.stop() for node in self.nodes()],
                                loop=self.loop)
 
-        # Now all nodes has stopped, but we need to wait until done_cb
+        # Now all nodes have stopped, but we need to wait until done_cb
         # finishes
         await asyncio.wait([self._task], loop=self.loop)
 

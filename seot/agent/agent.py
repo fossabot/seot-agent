@@ -67,7 +67,7 @@ class Agent:
         return await self._request("POST", "/job/{0}/accept".format(job_id))
 
     async def _notify_job_stop(self, job_id):
-        logger.info("Stopped job {0}".format(job_id))
+        logger.info("Terminated job {0}".format(job_id))
         return await self._request("POST", "/job/{0}/stop".format(job_id))
 
     async def _reject_job(self, job_id):
@@ -157,11 +157,11 @@ class Agent:
             await asyncio.sleep(sleep_length)
 
     def stop(self):
-        if not self.task.cancelled() and not self.task.done():
-            self.task.set_result(None)
+        if not self._task.cancelled() and not self._task.done():
+            self._task.set_result(None)
 
     def run(self):
-        self.task = asyncio.ensure_future(self._main(), loop=self.loop)
+        self._task = asyncio.ensure_future(self._main(), loop=self.loop)
 
         # Run main event loop
         logger.info("Starting main event loop...")
