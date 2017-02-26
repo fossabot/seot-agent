@@ -82,13 +82,17 @@ class Graph:
                 loop=self.loop, return_when=FIRST_EXCEPTION
             )
 
-            # If we reach here, the dataflow graph has stopped
+            # If we reach here, the dataflow graph has stopped for some reason
             for future in done:
+                # Let's find out why...
                 try:
                     future.result()
+                # We ignore this error, because it is most likely caused by
+                # graph.stop()
                 except asyncio.CancelledError:
                     pass
                 except Exception as e:
+                    # Cancel unfinished tasks to avoid warnings
                     for f in pending:
                         f.cancel()
 
@@ -104,7 +108,7 @@ class Graph:
         if not self.running():
             raise RuntimeError("Graph is not running")
 
-        # Request nodes to stop and wait until them to stop
+        # Request nodes to stop and wait until them to actually stop
         stop_tasks = [node.stop() for node in self.nodes() if node.running()]
         if stop_tasks:
             with suppress(asyncio.CancelledError):
