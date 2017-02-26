@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from logging import getLogger
 
@@ -25,7 +26,7 @@ def main():
     graph = GraphBuilder.from_yaml(sys.argv[1])
     loop.run_until_complete(graph.startup())
 
-    graph.start()
+    asyncio.ensure_future(graph.start(), loop=loop)
 
     # Run main event loop
     logger.info("Starting main event loop...")

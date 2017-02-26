@@ -68,7 +68,7 @@ class Graph:
 
         return list(result)
 
-    def start(self):
+    async def start(self):
         """
         Start this dataflow graph.
         """

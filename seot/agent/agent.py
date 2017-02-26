@@ -128,7 +128,7 @@ class Agent:
 
         self.jobs[job_id] = graph
 
-        graph.start()
+        await graph.start()
 
     async def _stop_job(self, job_id):
         graph = self.jobs.get(job_id)
