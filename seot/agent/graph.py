@@ -86,7 +86,7 @@ class Graph:
                 logger.error("Graph failed to start: {0}".format(e))
                 raise RuntimeError("Dataflow graph failed to start")
 
-        async def start():
+        async def run():
             self._running = True
 
             # Now we actually launch each node by calling .start()
@@ -110,7 +110,7 @@ class Graph:
                     logger.error("Graph crashed: {0}".format(e))
                     raise RuntimeError("Dataflow graph crashed")
 
-        asyncio.ensure_future(start(), loop=self.loop)
+        asyncio.ensure_future(run(), loop=self.loop)
 
     async def stop(self):
         """
@@ -122,11 +122,11 @@ class Graph:
         nodes = self._topological_sort(self.sources)
 
         # Request nodes to stop and wait until them to stop
-        tasks = [node.stop() for node in nodes if node.running()]
-        if tasks:
+        stop_tasks = [node.stop() for node in nodes if node.running()]
+        if stop_tasks:
             with suppress(asyncio.CancelledError):
-                await asyncio.wait(tasks, loop=self.loop)
+                await asyncio.wait(stop_tasks, loop=self.loop)
 
         # Do cleanup tasks
-        tasks = [node.cleanup() for node in nodes]
-        await asyncio.wait(tasks, loop=self.loop)
+        cleanup_tasks = [node.cleanup() for node in nodes]
+        await asyncio.wait(cleanup_tasks, loop=self.loop)

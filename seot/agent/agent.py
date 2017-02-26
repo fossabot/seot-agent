@@ -21,7 +21,7 @@ class Agent:
     def __init__(self):
         self.__class__.BASE_URL = config.get("cpp.base_url")
         self.loop = zmq.asyncio.install()
-        # Job UUID -> Graph
+        # UUID of Job -> Graph
         self.jobs = {}
 
     async def _request(self, method, endpoint, data=None, content_type=None):
@@ -91,51 +91,55 @@ class Agent:
         logger.debug("Received response for heartbeat")
 
         if resp is None:
-            return
+            pass
 
-        if "run" in resp and resp["run"]:
-            job_id = resp["run"]
-            logger.info("Got job offer for job {0}".format(job_id))
+        elif resp.get("run"):
+            await self._start_job(resp["run"])
 
-            if job_id in self.jobs:
-                logger.warning("Already running job {0}".format(job_id))
-                await self._reject_job(job_id)
-                return
-
-            job = await self._get_job(job_id)
-
-            await self._notify_job_start(job_id)
-            del job["application_id"]
-            del job["job_id"]
-
-            try:
-                graph = GraphBuilder.from_obj(job)
-            except Exception as e:
-                logger.warning("Failed to build graph {0}".format(e))
-                await self._notify_job_stop(job_id)
-                return
-
-            self.jobs[job_id] = graph
-
-            await graph.start()
-
-        elif "kill" in resp and resp["kill"]:
-            job_id = resp["kill"]
-            graph = self.jobs.get(job_id)
-            if not graph:
-                logger.warning("Unknown job {0}".format(job_id))
-                return
-
-            if graph.running():
-                logger.info("Terminating job {0}".format(job_id))
-                await graph.stop()
-
-            await self._notify_job_stop(job_id)
-
-            del self.jobs[job_id]
+        elif resp.get("kill"):
+            await self._stop_job(resp["kill"])
 
         else:
             logger.debug("Nothing to do")
+
+    async def _start_job(self, job_id):
+        logger.info("Got job offer for job {0}".format(job_id))
+
+        if job_id in self.jobs:
+            logger.warning("Already running job {0}".format(job_id))
+            await self._reject_job(job_id)
+            return
+
+        job = await self._get_job(job_id)
+
+        await self._notify_job_start(job_id)
+        del job["application_id"]
+        del job["job_id"]
+
+        try:
+            graph = GraphBuilder.from_obj(job)
+        except Exception as e:
+            logger.warning("Failed to build graph {0}".format(e))
+            await self._notify_job_stop(job_id)
+            return
+
+        self.jobs[job_id] = graph
+
+        await graph.start()
+
+    async def _stop_job(self, job_id):
+        graph = self.jobs.get(job_id)
+        if not graph:
+            logger.warning("Unknown job {0}".format(job_id))
+            return
+
+        if graph.running():
+            logger.info("Terminating job {0}".format(job_id))
+            await graph.stop()
+
+        await self._notify_job_stop(job_id)
+
+        del self.jobs[job_id]
 
     async def _main(self):
         sleep_length = config.get("cpp.heartbeat_interval")

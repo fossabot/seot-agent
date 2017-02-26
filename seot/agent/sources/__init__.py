@@ -1,9 +1,12 @@
 import asyncio
 import time
+from logging import getLogger
 
-from .. import config
+from .. import config, dpp
 from ..node import Node
 from ..sinks import BaseSink
+
+logger = getLogger(__name__)
 
 
 class BaseSource(Node):
@@ -20,6 +23,12 @@ class BaseSource(Node):
         return node
 
     async def _emit(self, data):
+        logger.debug("Node {0} of type {1} emitted:\n{2}".format(
+            self.name,
+            self.__class__.__name__,
+            dpp.format(data))
+        )
+
         if "meta" not in data:
             data["meta"] = {
                 "agent_id": config.get_state("agent_id"),

@@ -1,7 +1,11 @@
 import asyncio
 from abc import abstractmethod
+from logging import getLogger
 
+from .. import dpp
 from ..node import Node
+
+logger = getLogger(__name__)
 
 
 class BaseSink(Node):
@@ -10,6 +14,12 @@ class BaseSink(Node):
         self._queue = asyncio.Queue(maxsize=qsize, loop=self.loop)
 
     async def write(self, data):
+        logger.debug("Node {0} of type {1} received:\n{2}".format(
+            self.name,
+            self.__class__.__name__,
+            dpp.format(data))
+        )
+
         await self._queue.put(data)
 
     @abstractmethod
