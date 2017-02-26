@@ -125,6 +125,7 @@ class Agent:
 
         self.jobs[job_id] = graph
 
+        await graph.startup()
         await graph.start()
 
     async def _stop_job(self, job_id):
@@ -136,6 +137,7 @@ class Agent:
         if graph.running():
             logger.info("Terminating job {0}".format(job_id))
             await graph.stop()
+            await graph.cleanup()
 
         await self._notify_job_stop(job_id)
 

@@ -32,10 +32,17 @@ class Graph:
         if self.loop is None:
             self.loop = asyncio.get_event_loop()
 
-        self._running = False
+    def nodes(self):
+        """
+        Returns a list of all dataflow nodes
+        """
+        return self._topological_sort(self.sources)
 
     def running(self):
-        return self._running
+        """
+        Returns whether this dataflow graph is running or not.
+        """
+        return any([node.running() for node in self.nodes()])
 
     def _topological_sort(self, sources):
         """
@@ -68,36 +75,14 @@ class Graph:
         if self.running():
             raise RuntimeError("Graph is already running")
 
-        nodes = self._topological_sort(self.sources)
-
-        # Call .startup() to initializate each node
-        done, pending = await asyncio.wait(
-            [node.startup() for node in nodes],
-            loop=self.loop, return_when=FIRST_EXCEPTION
-        )
-        # Let's check if initialization was successful
-        for future in done:
-            try:
-                future.result()
-            except Exception as e:
-                for f in pending:
-                    f.cancel()
-
-                logger.error("Graph failed to start: {0}".format(e))
-                raise RuntimeError("Dataflow graph failed to start")
-
         async def run():
-            self._running = True
-
             # Now we actually launch each node by calling .start()
             done, pending = await asyncio.wait(
-                [node.start() for node in nodes],
+                [node.start() for node in self.nodes()],
                 loop=self.loop, return_when=FIRST_EXCEPTION
             )
 
             # If we reach here, the dataflow graph has stopped
-            self._running = False
-
             for future in done:
                 try:
                     future.result()
@@ -119,14 +104,38 @@ class Graph:
         if not self.running():
             raise RuntimeError("Graph is not running")
 
-        nodes = self._topological_sort(self.sources)
-
         # Request nodes to stop and wait until them to stop
-        stop_tasks = [node.stop() for node in nodes if node.running()]
+        stop_tasks = [node.stop() for node in self.nodes() if node.running()]
         if stop_tasks:
             with suppress(asyncio.CancelledError):
                 await asyncio.wait(stop_tasks, loop=self.loop)
 
-        # Do cleanup tasks
-        cleanup_tasks = [node.cleanup() for node in nodes]
+    async def startup(self):
+        """
+        Perform initializations required before starting this graph.
+        """
+        # Call node.startup() to initializate each node
+        done, pending = await asyncio.wait(
+            [node.startup() for node in self.nodes()],
+            loop=self.loop, return_when=FIRST_EXCEPTION
+        )
+
+        # Let's check if nodes were successfully initialized
+        for future in done:
+            try:
+                future.result()
+            except Exception as e:
+                # Cancel unfinished initializations
+                for f in pending:
+                    f.cancel()
+
+                logger.error("Graph failed to start: {0}".format(e))
+                raise RuntimeError("Dataflow graph failed to start")
+
+    async def cleanup(self):
+        """
+        Perform cleanups required before starting this graph.
+        """
+        # Currently we just ignore failed cleanup tasks
+        cleanup_tasks = [node.cleanup() for node in self.nodes()]
         await asyncio.wait(cleanup_tasks, loop=self.loop)
