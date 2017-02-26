@@ -119,14 +119,15 @@ class Agent:
 
         try:
             graph = GraphBuilder.from_obj(job)
+            await graph.startup()
         except Exception as e:
-            logger.warning("Failed to build graph {0}".format(e))
+            logger.warning("Failed to start job {0}: {1}".format(job_id, e))
             await self._notify_job_stop(job_id)
+            await graph.cleanup()
             return
 
         self.jobs[job_id] = graph
 
-        await graph.startup()
         graph.start()
 
     async def _stop_job(self, job_id):
