@@ -113,8 +113,9 @@ class Agent:
         job = await self._get_job(job_id)
 
         await self._notify_job_start(job_id)
-        del job["application_id"]
-        del job["job_id"]
+
+        job.pop("application_id", None)
+        job.pop("job_id", None)
 
         try:
             graph = GraphBuilder.from_obj(job)
@@ -126,7 +127,7 @@ class Agent:
         self.jobs[job_id] = graph
 
         await graph.startup()
-        await graph.start()
+        graph.start()
 
     async def _stop_job(self, job_id):
         graph = self.jobs.get(job_id)

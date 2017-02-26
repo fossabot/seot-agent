@@ -68,7 +68,7 @@ class Graph:
 
         return list(result)
 
-    async def start(self):
+    def start(self):
         """
         Start this dataflow graph.
         """
@@ -109,10 +109,13 @@ class Graph:
             raise RuntimeError("Graph is not running")
 
         # Request nodes to stop and wait until them to actually stop
-        stop_tasks = [node.stop() for node in self.nodes() if node.running()]
-        if stop_tasks:
-            with suppress(asyncio.CancelledError):
-                await asyncio.wait(stop_tasks, loop=self.loop)
+        running_nodes = [node for node in self.nodes() if node.running()]
+        if not running_nodes:
+            return
+
+        with suppress(asyncio.CancelledError):
+            await asyncio.wait([node.stop() for node in self.nodes()],
+                               loop=self.loop)
 
     async def startup(self):
         """
@@ -141,5 +144,5 @@ class Graph:
         Perform cleanups required before starting this graph.
         """
         # Currently we just ignore failed cleanup tasks
-        cleanup_tasks = [node.cleanup() for node in self.nodes()]
-        await asyncio.wait(cleanup_tasks, loop=self.loop)
+        await asyncio.wait([node.cleanup() for node in self.nodes()],
+                           loop=self.loop)
