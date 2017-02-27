@@ -24,6 +24,8 @@ def main():
     loop = zmq.asyncio.install()
 
     graph = GraphBuilder.from_yaml(sys.argv[1])
+    loop.run_until_complete(graph.startup())
+
     asyncio.ensure_future(graph.start(), loop=loop)
 
     # Run main event loop
@@ -37,6 +39,7 @@ def main():
 
         if graph.running():
             loop.run_until_complete(graph.stop())
+            loop.run_until_complete(graph.cleanup())
 
     loop.close()
 
