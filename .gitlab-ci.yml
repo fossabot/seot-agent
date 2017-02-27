@@ -12,16 +12,16 @@ stages:
   - test
   - build
 
-check_style:
+style:
   stage: test
   script:
-    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
     - flake8
 
-build_wheel:
+wheel:
   stage: build
   script:
-    - pip install -U setuptools wheel
+    - pip install -r requirements-dev.txt
     - pip install -r requirements.txt
     - python setup.py bdist_wheel
   artifacts:
@@ -30,7 +30,7 @@ build_wheel:
   only:
     - master
 
-build_docker:
+docker:
   stage: build
   image: docker:git
   services:
