@@ -1,4 +1,6 @@
 # seot-agent
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fshimojo-lab%2Fseot-agent.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fshimojo-lab%2Fseot-agent?ref=badge_shield)
+
 
 PoC code for the Sharing Economy of Things platform.
 
@@ -50,3 +52,7 @@ to use `DockerTransformer`
 
 - [MongoDB Compass](https://www.mongodb.com/products/compass?jmp=docs): For
   exploring data stored in MongoDB.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fshimojo-lab%2Fseot-agent.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fshimojo-lab%2Fseot-agent?ref=badge_large)
